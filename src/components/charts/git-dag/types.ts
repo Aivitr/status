@@ -25,8 +25,10 @@ export interface CommitNodeData extends Record<string, unknown> {
   isMain: boolean;
   isHead: boolean;
   isMerge: boolean;
+  isBranchStart?: boolean;
   branchColor: string;
   branchHeads?: string[];
+  forkFromBranch?: string;
   isSelected?: boolean;
 }
 

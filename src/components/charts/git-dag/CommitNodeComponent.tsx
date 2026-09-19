@@ -68,6 +68,54 @@ export const CommitNodeComponent = memo(function CommitNodeComponent({
         style={{ right: '6px', top: '50%', transform: 'translateY(-50%)' }}
       />
 
+      {data.isHead && (
+        <div
+          className="absolute left-7 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] font-semibold shadow-xs select-none pointer-events-auto whitespace-nowrap transition-transform hover:scale-105"
+          style={{
+            borderColor: `${branchColor}60`,
+            backgroundColor: 'var(--panel-surface)',
+            color: branchColor,
+          }}
+          title={`HEAD of ${data.branch}`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: branchColor }} />
+          <span className="max-w-[130px] truncate">
+            {data.branchHeads && data.branchHeads.length > 0
+              ? data.branchHeads.join(', ')
+              : data.branch}
+          </span>
+          {data.isMain ? (
+            <span className="rounded-[2px] bg-[#2563eb]/20 px-1 py-0.2 text-[7.5px] font-bold uppercase tracking-wider text-[#2563eb]">
+              HEAD
+            </span>
+          ) : (
+            <span
+              className="rounded-[2px] px-1 py-0.2 text-[7.5px] font-bold uppercase tracking-wider opacity-90"
+              style={{ backgroundColor: `${branchColor}25` }}
+            >
+              HEAD
+            </span>
+          )}
+        </div>
+      )}
+
+      {!data.isMain && data.isBranchStart && !data.isHead && (
+        <div
+          className="absolute -top-5 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-[3px] border px-1.5 py-0.2 font-mono text-[8px] font-medium shadow-2xs select-none pointer-events-none whitespace-nowrap"
+          style={{
+            borderColor: `${branchColor}40`,
+            backgroundColor: 'var(--panel-surface)',
+            color: branchColor,
+          }}
+          title={`Fork: ${data.branch}`}
+        >
+          <svg className="h-2 w-2 shrink-0 opacity-70" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm0 2.122a2.25 2.25 0 1 0-1.5 0v5.256a2.25 2.25 0 1 0 1.5 0V8.5h3.75A2.75 2.75 0 0 0 11 5.75v-.378a2.25 2.25 0 1 0-1.5 0v.378a1.25 1.25 0 0 1-1.25 1.25H5V5.372Z" />
+          </svg>
+          <span className="max-w-[110px] truncate">{data.branch}</span>
+        </div>
+      )}
+
       {isHovered && (
         <div
           role="tooltip"

@@ -140,6 +140,16 @@ export function GitBranchGraph({
     return { nodes: layout.nodes, edges: uniqueEdges };
   }, [hasData, rawNodes, rawBranches, mainBranchName, effectiveVisibleBranches]);
 
+  const fitViewOptions = useMemo(() => {
+    const targetNodes = nodes.length > 20 ? nodes.slice(-20) : undefined;
+    return {
+      nodes: targetNodes,
+      minZoom: 0.65,
+      maxZoom: 1.0,
+      padding: 0.2,
+    };
+  }, [nodes]);
+
   const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     const data = node.data as unknown as CommitNodeData;
     setSelectedCommit((prev) => (prev?.sha === data.sha ? null : data));
@@ -299,9 +309,11 @@ export function GitBranchGraph({
             onNodeClick={handleNodeClick}
             onPaneClick={handlePaneClick}
             fitView
-            fitViewOptions={{ padding: 0.15 }}
-            minZoom={0.2}
+            fitViewOptions={fitViewOptions}
+            defaultViewport={{ x: 30, y: 30, zoom: 0.85 }}
+            minZoom={0.3}
             maxZoom={1.5}
+            panOnScroll={true}
             proOptions={{ hideAttribution: true }}
             className="bg-[var(--panel-surface)]"
           >

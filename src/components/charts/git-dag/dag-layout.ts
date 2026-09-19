@@ -7,10 +7,11 @@ import type {
   CommitNodeData,
 } from './types';
 import { LANE_COLORS } from './types';
+import { extractMergeInfo } from './merge-detector';
+import { createDagEdges } from './dag-edges';
 
 const NODE_WIDTH = 24;
 const NODE_HEIGHT = 24;
-const MERGE_REGEX = /Merge pull request #\d+ from (?:[\w-]+\/)?([^\s\n]+)|Merge branch '([^']+)'/i;
 
 export function computeDagLayout(
   rawNodes: CommitNode[],
@@ -58,13 +59,52 @@ export function computeDagLayout(
       colorIdx++;
     }
   }
+  for (const n of nodes) {
+    if (!branchColorMap.has(n.branch)) {
+      branchColorMap.set(n.branch, LANE_COLORS[colorIdx % LANE_COLORS.length]);
+      colorIdx++;
+    }
+  }
+
+  const branchCommitsMap = new Map<string, CommitNode[]>();
+  for (const n of nodes) {
+    const list = branchCommitsMap.get(n.branch) || [];
+    list.push(n);
+    branchCommitsMap.set(n.branch, list);
+  }
 
   const headShaToBranches = new Map<string, string[]>();
+  const branchHeadSha = new Map<string, string>();
   for (const b of filteredBranches) {
-    if (b.latestSha) {
-      const existing = headShaToBranches.get(b.latestSha) || [];
-      existing.push(b.name);
-      headShaToBranches.set(b.latestSha, existing);
+    let headSha = b.latestSha;
+    if (!headSha || !uniqueMap.has(headSha)) {
+      const bNodes = branchCommitsMap.get(b.name);
+      if (bNodes && bNodes.length > 0) {
+        headSha = bNodes[bNodes.length - 1].sha;
+      }
+    }
+    if (headSha) {
+      branchHeadSha.set(b.name, headSha);
+      const existing = headShaToBranches.get(headSha) || [];
+      if (!existing.includes(b.name)) existing.push(b.name);
+      headShaToBranches.set(headSha, existing);
+    }
+  }
+
+  for (const [bName, bNodes] of branchCommitsMap.entries()) {
+    if (!branchHeadSha.has(bName) && bNodes.length > 0) {
+      const hSha = bNodes[bNodes.length - 1].sha;
+      branchHeadSha.set(bName, hSha);
+      const existing = headShaToBranches.get(hSha) || [];
+      if (!existing.includes(bName)) existing.push(bName);
+      headShaToBranches.set(hSha, existing);
+    }
+  }
+
+  const branchFirstSha = new Map<string, string>();
+  for (const [bName, bNodes] of branchCommitsMap.entries()) {
+    if (bNodes.length > 0) {
+      branchFirstSha.set(bName, bNodes[0].sha);
     }
   }
 
@@ -73,10 +113,10 @@ export function computeDagLayout(
   dagreGraph.setGraph({
     rankdir: 'LR',
     align: 'UL',
-    nodesep: 28,
-    ranksep: 36,
-    marginx: 24,
-    marginy: 24,
+    nodesep: 40,
+    ranksep: 50,
+    marginx: 32,
+    marginy: 32,
   });
 
   const nodeDataMap = new Map<string, CommitNodeData>();
@@ -86,7 +126,8 @@ export function computeDagLayout(
     const branchColor = branchColorMap.get(node.branch) || LANE_COLORS[0];
     const branchHeads = headShaToBranches.get(node.sha) || [];
     const isHead = branchHeads.length > 0;
-    const isMerge = MERGE_REGEX.test(node.message);
+    const isBranchStart = !isMain && branchFirstSha.get(node.branch) === node.sha;
+    const isMerge = Boolean(extractMergeInfo(node.message));
 
     const data: CommitNodeData = {
       sha: node.sha,
@@ -99,8 +140,10 @@ export function computeDagLayout(
       isMain,
       isHead,
       isMerge,
+      isBranchStart,
       branchColor,
       branchHeads,
+      forkFromBranch: isBranchStart ? mainBranchName : undefined,
     };
 
     nodeDataMap.set(node.sha, data);
@@ -110,92 +153,14 @@ export function computeDagLayout(
     });
   }
 
-  const edges: GitFlowEdge[] = [];
-  const branchLastNode = new Map<string, string>();
-
-  for (let i = 0; i < nodes.length; i++) {
-    const current = nodes[i];
-    const currentId = `commit-${current.sha}`;
-    const branch = current.branch;
-    const isMain = branch === mainBranchName;
-    const mergeMatch = current.message.match(MERGE_REGEX);
-
-    const lastShaOnBranch = branchLastNode.get(branch);
-    if (lastShaOnBranch) {
-      const sourceId = `commit-${lastShaOnBranch}`;
-      const edgeId = `edge-${lastShaOnBranch}-${current.sha}`;
-      const color = branchColorMap.get(branch) || LANE_COLORS[0];
-
-      edges.push({
-        id: edgeId,
-        source: sourceId,
-        target: currentId,
-        type: 'smoothstep',
-        animated: current.ciStatus === 'RUNNING',
-        style: {
-          stroke: isMain ? '#2563eb' : color,
-          strokeWidth: isMain ? 2.5 : 1.75,
-          opacity: isMain ? 1 : 0.85,
-        },
-      });
-      dagreGraph.setEdge(sourceId, currentId, { weight: isMain ? 10 : 1, minlen: 1 });
-    } else if (!isMain) {
-      const lastMainSha = branchLastNode.get(mainBranchName);
-      if (lastMainSha) {
-        const sourceId = `commit-${lastMainSha}`;
-        const edgeId = `fork-${lastMainSha}-${current.sha}`;
-        const color = branchColorMap.get(branch) || LANE_COLORS[1];
-
-        edges.push({
-          id: edgeId,
-          source: sourceId,
-          target: currentId,
-          type: 'smoothstep',
-          style: {
-            stroke: color,
-            strokeWidth: 1.5,
-            strokeDasharray: '3 3',
-            opacity: 0.75,
-          },
-        });
-        dagreGraph.setEdge(sourceId, currentId, { weight: 1, minlen: 1 });
-      }
-    }
-
-    if (mergeMatch && isMain) {
-      const mergedBranchName = (mergeMatch[1] || mergeMatch[2] || '').trim();
-      let mergedSha = branchLastNode.get(mergedBranchName);
-      if (!mergedSha) {
-        for (const [bName, s] of branchLastNode.entries()) {
-          if (bName.endsWith(mergedBranchName) || mergedBranchName.endsWith(bName)) {
-            mergedSha = s;
-            break;
-          }
-        }
-      }
-
-      if (mergedSha && mergedSha !== current.sha) {
-        const sourceId = `commit-${mergedSha}`;
-        const edgeId = `merge-${mergedSha}-${current.sha}`;
-        const color = branchColorMap.get(mergedBranchName) || LANE_COLORS[1];
-
-        edges.push({
-          id: edgeId,
-          source: sourceId,
-          target: currentId,
-          type: 'smoothstep',
-          style: {
-            stroke: color,
-            strokeWidth: 2,
-            opacity: 0.9,
-          },
-        });
-        dagreGraph.setEdge(sourceId, currentId, { weight: 1, minlen: 1 });
-      }
-    }
-
-    branchLastNode.set(branch, current.sha);
-  }
+  const edges = createDagEdges({
+    nodes,
+    mainBranchName,
+    filteredBranches,
+    branchCommitsMap,
+    branchColorMap,
+    dagreGraph,
+  });
 
   dagre.layout(dagreGraph);
 
@@ -209,8 +174,8 @@ export function computeDagLayout(
       id,
       type: 'commit',
       position: {
-        x: dagreNode.x - NODE_WIDTH / 2,
-        y: dagreNode.y - NODE_HEIGHT / 2,
+        x: (dagreNode?.x ?? 0) - NODE_WIDTH / 2,
+        y: (dagreNode?.y ?? 0) - NODE_HEIGHT / 2,
       },
       data,
     });
