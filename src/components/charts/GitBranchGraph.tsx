@@ -10,6 +10,7 @@ import type { TelemetrySummaryDTO, NodeCIStatus, BranchStatus } from '@/lib/type
 
 export interface GitBranchGraphProps {
   gitBranchGraph?: TelemetrySummaryDTO['gitBranchGraph'];
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -24,11 +25,7 @@ const STATUS_CONFIG: Record<BranchStatus, { color: string; bg: string; border: s
 };
 
 function getCiColor(status: NodeCIStatus) {
-  switch (status) {
-    case 'PASSED': return 'var(--status-success)';
-    case 'FAILED': return 'var(--status-danger)';
-    case 'RUNNING': return 'var(--status-running)';
-  }
+  return status === 'PASSED' ? 'var(--status-success)' : status === 'FAILED' ? 'var(--status-danger)' : 'var(--status-running)';
 }
 
 function formatTimeTick(date: Date): string {
@@ -151,31 +148,10 @@ function BranchGraphInner({
             const isHovered = hoveredNode?.node.sha === node.sha;
 
             return (
-              <g
-                key={node.sha}
-                className="cursor-pointer"
-                onPointerEnter={() => setHoveredNode({ node, x: cx, y: cy })}
-              >
-                {node.ciStatus === 'RUNNING' && (
-                  <circle cx={cx} cy={cy} r={7} fill="none" stroke="var(--status-running)" strokeWidth={1.5} opacity={0.7} />
-                )}
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={isHovered ? 5.5 : 4}
-                  fill={color}
-                  stroke="var(--panel-surface)"
-                  strokeWidth={2}
-                />
-                <text
-                  x={cx}
-                  y={cy + 12}
-                  textAnchor="middle"
-                  fill="var(--text-muted)"
-                  fontSize={8}
-                  fontFamily="var(--font-mono)"
-                  className="tabular-nums"
-                >
+              <g key={node.sha} className="cursor-pointer" onPointerEnter={() => setHoveredNode({ node, x: cx, y: cy })}>
+                {node.ciStatus === 'RUNNING' && <circle cx={cx} cy={cy} r={7} fill="none" stroke="var(--status-running)" strokeWidth={1.5} opacity={0.7} />}
+                <circle cx={cx} cy={cy} r={isHovered ? 5.5 : 4} fill={color} stroke="var(--panel-surface)" strokeWidth={2} />
+                <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-muted)" fontSize={8} fontFamily="var(--font-mono)" className="tabular-nums">
                   {node.sha.slice(0, 6)}
                 </text>
               </g>
@@ -195,14 +171,10 @@ function BranchGraphInner({
         </Group>
       </svg>
 
-      {/* Commit Node Tooltip */}
       {hoveredNode && (
         <div
           className="pointer-events-none absolute z-20 max-w-xs -translate-x-1/2 -translate-y-full rounded-[4px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-2 font-mono text-[10px] shadow-sm"
-          style={{
-            left: Math.max(margin.left + hoveredNode.x, 80),
-            top: Math.max(margin.top + hoveredNode.y - 12, 10),
-          }}
+          style={{ left: Math.max(margin.left + hoveredNode.x, 80), top: Math.max(margin.top + hoveredNode.y - 12, 10) }}
         >
           <div className="flex items-center justify-between gap-2 border-b border-[var(--panel-border-subtle)] pb-1">
             <span className="font-semibold text-[var(--text-primary)]">#{hoveredNode.node.sha.slice(0, 7)}</span>
@@ -221,14 +193,13 @@ function BranchGraphInner({
   );
 }
 
-export function GitBranchGraph({ gitBranchGraph, className }: GitBranchGraphProps) {
+export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }: GitBranchGraphProps) {
   const branches = gitBranchGraph?.branches ?? [];
   const nodes = gitBranchGraph?.nodes ?? [];
   const hasData = branches.length > 0 || nodes.length > 0;
 
   return (
     <div className={clsx('flex flex-col rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 shadow-none', className)}>
-      {/* Card Header */}
       <div className="flex items-start justify-between gap-2 border-b border-[var(--panel-border-subtle)] pb-2.5">
         <div>
           <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)]">Topology & Commits</span>
@@ -248,9 +219,26 @@ export function GitBranchGraph({ gitBranchGraph, className }: GitBranchGraphProp
         )}
       </div>
 
-      {/* Topology Canvas */}
       <div className="mt-3 h-52 w-full">
-        {!hasData ? (
+        {isLoading && !hasData ? (
+          <div className="flex h-full flex-col justify-between p-2">
+            <div className="space-y-4 py-2">
+              <div className="flex items-center gap-3">
+                <div className="skeleton h-3 w-20 rounded-[2px]" />
+                <div className="skeleton h-1 flex-1 rounded-[1px]" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="skeleton h-3 w-28 rounded-[2px]" />
+                <div className="skeleton h-1 flex-1 rounded-[1px]" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="skeleton h-3 w-24 rounded-[2px]" />
+                <div className="skeleton h-1 flex-1 rounded-[1px]" />
+              </div>
+            </div>
+            <div className="skeleton h-2 w-full rounded-[2px]" />
+          </div>
+        ) : !hasData ? (
           <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
             <span className="font-mono text-xs font-medium text-[var(--text-secondary)]">No branch topology data</span>
             <span className="font-mono text-[10px] text-[var(--text-muted)]">Awaiting git branch network telemetry</span>

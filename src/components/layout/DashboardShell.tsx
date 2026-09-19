@@ -2,6 +2,7 @@ import React from "react";
 import clsx from "clsx";
 import { StatusBar, StatusBarProps } from "./StatusBar";
 import { BentoGrid } from "./BentoGrid";
+import { KioskMode } from "@/components/dashboard/KioskMode";
 
 export interface DashboardShellProps {
   children?: React.ReactNode;
@@ -16,6 +17,7 @@ export interface DashboardShellProps {
  * - Full-viewport height layout (`min-h-screen`)
  * - Technical off-white background (`var(--canvas-bg)`)
  * - Top telemetry status bar
+ * - Top Kiosk TV mode countdown & auto-rotation bar
  * - Responsive 12-column BentoGrid main container
  */
 export function DashboardShell({
@@ -31,6 +33,7 @@ export function DashboardShell({
       )}
     >
       <StatusBar {...statusProps} />
+      <KioskMode />
       <main className="flex-1 py-4 sm:py-6 lg:py-8">
         <BentoGrid>{children}</BentoGrid>
       </main>

@@ -12,6 +12,7 @@ import type { TelemetrySummaryDTO } from '@/lib/types/telemetry';
 
 export interface QualityBenchmarksChartProps {
   qualityBenchmarks?: TelemetrySummaryDTO['qualityBenchmarks'];
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -167,7 +168,7 @@ function QualityChartInner({ width, height, points }: { width: number; height: n
   );
 }
 
-export function QualityBenchmarksChart({ qualityBenchmarks, className }: QualityBenchmarksChartProps) {
+export function QualityBenchmarksChart({ qualityBenchmarks, isLoading = false, className }: QualityBenchmarksChartProps) {
   const coverageHistory = useMemo(() => qualityBenchmarks?.coverageHistory ?? [], [qualityBenchmarks?.coverageHistory]);
   const bundleHistory = useMemo(() => qualityBenchmarks?.bundleHistory ?? [], [qualityBenchmarks?.bundleHistory]);
   const hasData = coverageHistory.length > 0 || bundleHistory.length > 0;
@@ -207,7 +208,22 @@ export function QualityBenchmarksChart({ qualityBenchmarks, className }: Quality
       </div>
 
       <div className="mt-3 h-52 w-full">
-        {!hasData ? (
+        {isLoading && !hasData ? (
+          <div className="flex h-full flex-col justify-between p-2">
+            <div className="flex justify-between">
+              <div className="skeleton h-2.5 w-16 rounded-[2px]" />
+              <div className="skeleton h-2.5 w-20 rounded-[2px]" />
+            </div>
+            <div className="flex h-28 items-end gap-3 px-2">
+              <div className="skeleton h-1/2 flex-1 rounded-t-[2px]" />
+              <div className="skeleton h-3/4 flex-1 rounded-t-[2px]" />
+              <div className="skeleton h-2/3 flex-1 rounded-t-[2px]" />
+              <div className="skeleton h-4/5 flex-1 rounded-t-[2px]" />
+              <div className="skeleton h-3/5 flex-1 rounded-t-[2px]" />
+            </div>
+            <div className="skeleton h-2 w-full rounded-[2px]" />
+          </div>
+        ) : !hasData ? (
           <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
             <span className="font-mono text-xs font-medium text-[var(--text-secondary)]">No quality data</span>
             <span className="font-mono text-[10px] text-[var(--text-muted)]">Awaiting test coverage & bundle telemetry</span>

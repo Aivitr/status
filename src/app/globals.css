@@ -16,6 +16,38 @@
   --accent: oklch(0.52 0.20 255);
 }
 
+[data-theme="clean-light"] {
+  --canvas-bg: oklch(0.985 0.004 240);
+  --panel-surface: oklch(1.0 0 0);
+  --panel-subtle: oklch(0.965 0.005 240);
+  --panel-border: oklch(0.88 0.01 240);
+  --panel-border-subtle: oklch(0.92 0.005 240);
+  --text-primary: oklch(0.20 0.02 240);
+  --text-secondary: oklch(0.45 0.02 240);
+  --text-muted: oklch(0.55 0.015 240);
+  --status-success: oklch(0.62 0.17 145);
+  --status-running: oklch(0.65 0.15 225);
+  --status-warning: oklch(0.72 0.16 75);
+  --status-danger: oklch(0.58 0.22 25);
+  --accent: oklch(0.52 0.20 255);
+}
+
+[data-theme="industrial-dark"] {
+  --canvas-bg: oklch(0.14 0.02 240);
+  --panel-surface: oklch(0.18 0.02 240);
+  --panel-subtle: oklch(0.22 0.02 240);
+  --panel-border: oklch(0.28 0.02 240);
+  --panel-border-subtle: oklch(0.24 0.02 240);
+  --text-primary: oklch(0.95 0.01 240);
+  --text-secondary: oklch(0.75 0.02 240);
+  --text-muted: oklch(0.55 0.02 240);
+  --status-success: oklch(0.65 0.20 145);
+  --status-running: oklch(0.68 0.18 225);
+  --status-warning: oklch(0.75 0.18 75);
+  --status-danger: oklch(0.65 0.24 25);
+  --accent: oklch(0.65 0.22 255);
+}
+
 @theme {
   --color-canvas-bg: var(--canvas-bg);
   --color-panel-surface: var(--panel-surface);
@@ -65,8 +97,63 @@ pre {
   animation: beacon-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* 2-layer radial heartbeat pulse beacon */
+@keyframes pulse-ring-1 {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-ring-2 {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring-1 {
+  animation: pulse-ring-1 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse-ring-2 {
+  animation: pulse-ring-2 2.2s cubic-bezier(0, 0, 0.2, 1) infinite 0.7s;
+}
+
+/* Technical Skeleton Shimmer */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--panel-subtle) 25%,
+    var(--panel-border-subtle) 50%,
+    var(--panel-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-pulse-beacon {
+  .animate-pulse-beacon,
+  .animate-pulse-ring-1,
+  .animate-pulse-ring-2,
+  .skeleton {
     animation: none;
   }
 }
