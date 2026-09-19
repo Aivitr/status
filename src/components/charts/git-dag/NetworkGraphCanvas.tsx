@@ -41,57 +41,26 @@ export function NetworkGraphCanvas({
             x2={width}
             y2={(index + 1) * 36}
             stroke="var(--panel-border-subtle)"
-            strokeOpacity={0.35}
-            strokeDasharray="4 4"
+            strokeOpacity={0.2}
           />
         ))}
 
         {/* Horizontal Tracks */}
-        {lanes.map((lane) => {
-          if (lane.isMain) {
-            return (
-              <g key={`track-${lane.name}`}>
-                {/* Main continuous trunk backbone */}
-                <line
-                  x1={lane.startX}
-                  y1={lane.y}
-                  x2={lane.endX}
-                  stroke="#2563eb"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  opacity={0.9}
-                />
-              </g>
-            );
-          }
-
-          return (
-            <g key={`track-${lane.name}`}>
-              {/* Feature branch subtle baseline across canvas */}
+        {lanes.map((lane) => (
+          <g key={`track-${lane.name}`}>
+            {lane.hasCommits && (
               <line
-                x1={10}
+                x1={lane.startX}
                 y1={lane.y}
-                x2={width - 20}
+                x2={lane.endX}
                 stroke={lane.color}
-                strokeWidth={1}
-                strokeDasharray="3 4"
-                opacity={0.2}
+                strokeWidth={lane.isMain ? 2.5 : 1.75}
+                strokeLinecap="round"
+                opacity={lane.isMain ? 0.95 : 0.8}
               />
-              {/* Feature branch active commit range */}
-              {lane.hasCommits && (
-                <line
-                  x1={lane.startX}
-                  y1={lane.y}
-                  x2={lane.endX}
-                  stroke={lane.color}
-                  strokeWidth={1.75}
-                  strokeLinecap="round"
-                  opacity={0.85}
-                />
-              )}
-            </g>
-          );
-        })}
+            )}
+          </g>
+        ))}
 
         {/* Fork S-curves */}
         {forkCurves.map((fork) => (

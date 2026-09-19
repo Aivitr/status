@@ -46,14 +46,18 @@ export function createForkCurves({
     const toX = firstCommit.x;
     const toY = firstCommit.y;
 
-    const dx = Math.max(16, Math.min(36, Math.abs(toX - fromX) * 0.45));
-    const pathD = `M ${fromX} ${fromY} C ${fromX + dx} ${fromY}, ${toX - dx} ${toY}, ${toX} ${toY}`;
+    let clampFromX = Math.max(fromX, toX - X_STEP * 1.5);
+    if (Math.abs(clampFromX - toX) < 4 || clampFromX >= toX) {
+      clampFromX = toX - 24;
+    }
+    const dx = Math.min(24, Math.abs(toX - clampFromX) * 0.5);
+    const pathD = `M ${clampFromX} ${fromY} C ${clampFromX + dx} ${fromY}, ${toX - dx} ${toY}, ${toX} ${toY}`;
 
     forkCurves.push({
       id: `fork-${b.name}-${firstCommit.sha}`,
       branch: b.name,
       color: b.color,
-      fromX,
+      fromX: clampFromX,
       fromY,
       toX,
       toY,
@@ -118,17 +122,26 @@ export function createMergeCurves({
         const fromCommit = priorCommits[priorCommits.length - 1];
         const fromX = fromCommit.x;
         const fromY = fromCommit.y;
-        const toX = node.x;
+        let toX = node.x;
         const toY = node.y;
 
-        const dx = Math.max(16, Math.min(36, Math.abs(toX - fromX) * 0.45));
-        const pathD = `M ${fromX} ${fromY} C ${fromX + dx} ${fromY}, ${toX - dx} ${toY}, ${toX} ${toY}`;
+        if (toX <= fromX) {
+          toX = fromX + 24;
+        }
+
+        let clampFromX = Math.max(fromX, toX - X_STEP * 1.5);
+        if (Math.abs(toX - clampFromX) < 4 || clampFromX >= toX) {
+          clampFromX = toX - 24;
+        }
+
+        const dx = Math.min(24, Math.abs(toX - clampFromX) * 0.5);
+        const pathD = `M ${clampFromX} ${fromY} C ${clampFromX + dx} ${fromY}, ${toX - dx} ${toY}, ${toX} ${toY}`;
 
         mergeCurves.push({
           id: `merge-${matchedBranch.name}-${node.sha}`,
           branch: matchedBranch.name,
           color: matchedBranch.color,
-          fromX,
+          fromX: clampFromX,
           fromY,
           toX,
           toY,
@@ -160,17 +173,26 @@ export function createMergeCurves({
     if (targetMain) {
       const fromX = lastCommit.x;
       const fromY = lastCommit.y;
-      const toX = targetMain.x;
+      let toX = targetMain.x;
       const toY = targetMain.y;
 
-      const dx = Math.max(16, Math.min(36, Math.abs(toX - fromX) * 0.45));
-      const pathD = `M ${fromX} ${fromY} C ${fromX + dx} ${fromY}, ${toX - dx} ${toY}, ${toX} ${toY}`;
+      if (toX <= fromX) {
+        toX = fromX + 24;
+      }
+
+      let clampFromX = Math.max(fromX, toX - X_STEP * 1.5);
+      if (Math.abs(toX - clampFromX) < 4 || clampFromX >= toX) {
+        clampFromX = toX - 24;
+      }
+
+      const dx = Math.min(24, Math.abs(toX - clampFromX) * 0.5);
+      const pathD = `M ${clampFromX} ${fromY} C ${clampFromX + dx} ${fromY}, ${toX - dx} ${toY}, ${toX} ${toY}`;
 
       mergeCurves.push({
         id: `merge-synced-${b.name}-${targetMain.sha}`,
         branch: b.name,
         color: b.color,
-        fromX,
+        fromX: clampFromX,
         fromY,
         toX,
         toY,
