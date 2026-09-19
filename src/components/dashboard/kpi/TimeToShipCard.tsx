@@ -9,9 +9,33 @@ export interface TimeToShipCardProps {
   className?: string;
 }
 
+function formatHours(hours: number): string {
+  if (!Number.isFinite(hours) || hours <= 0) return '0.0h';
+  if (hours < 1) {
+    const mins = Math.round(hours * 60);
+    return mins > 0 ? `${mins}m` : `${hours.toFixed(1)}h`;
+  }
+  return `${hours.toFixed(1)}h`;
+}
+
+function formatMetricDisplay(hours: number): { value: string; unit: string } {
+  if (!Number.isFinite(hours) || hours <= 0) {
+    return { value: '0.0', unit: 'hours avg' };
+  }
+  if (hours < 1) {
+    const mins = Math.round(hours * 60);
+    if (mins > 0) {
+      return { value: `${mins}`, unit: 'mins avg' };
+    }
+    return { value: hours.toFixed(1), unit: 'hours avg' };
+  }
+  return { value: hours.toFixed(1), unit: 'hours avg' };
+}
+
 export function TimeToShipCard({ timeToShip, className }: TimeToShipCardProps) {
   const avgHours = timeToShip?.avgHours ?? 0;
   const p95Hours = timeToShip?.p95Hours ?? 0;
+  const { value: avgValue, unit: avgUnit } = formatMetricDisplay(avgHours);
 
   return (
     <div
@@ -31,17 +55,17 @@ export function TimeToShipCard({ timeToShip, className }: TimeToShipCardProps) {
           </h3>
         </div>
         <span className="rounded-[4px] border border-[var(--panel-border-subtle)] bg-[var(--panel-subtle)] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[var(--text-secondary)]">
-          P95: {p95Hours}h
+          P95: {formatHours(p95Hours)}
         </span>
       </div>
 
       {/* Main Metric: Average Hours */}
       <div className="my-3 flex items-baseline gap-2">
         <span className="font-mono text-3xl font-bold tracking-tight tabular-nums text-[var(--text-primary)]">
-          {avgHours}
+          {avgValue}
         </span>
         <span className="font-mono text-xs uppercase tracking-wide text-[var(--text-secondary)]">
-          hours avg
+          {avgUnit}
         </span>
       </div>
 
@@ -49,7 +73,7 @@ export function TimeToShipCard({ timeToShip, className }: TimeToShipCardProps) {
       <div className="space-y-1.5 border-t border-[var(--panel-border-subtle)] pt-2 font-mono text-[10px]">
         <div className="flex justify-between text-[var(--text-muted)]">
           <span>Mean Cycle</span>
-          <span className="tabular-nums text-[var(--text-secondary)]">{avgHours}h</span>
+          <span className="tabular-nums text-[var(--text-secondary)]">{formatHours(avgHours)}</span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-[2px] bg-[var(--panel-subtle)]">
           <div

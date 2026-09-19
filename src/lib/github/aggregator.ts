@@ -135,6 +135,8 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     avgHours = mergedDurations.reduce((a, b) => a + b, 0) / mergedDurations.length;
     p95Hours = mergedDurations[Math.floor(mergedDurations.length * 0.95)];
   }
+  avgHours = Math.round(avgHours * 10) / 10;
+  p95Hours = Math.round(p95Hours * 10) / 10;
 
   // Process Commits
   const commits = repository?.defaultBranchRef?.target.history.nodes || [];
@@ -236,6 +238,31 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     });
   }
 
+  const mergeBranchRegex = /Merge pull request #\d+ from (?:[\w-]+\/)?([^\s\n]+)|Merge branch '([^']+)'/i;
+  commits.forEach(c => {
+    const match = c.message.match(mergeBranchRegex);
+    if (match) {
+      const bName = (match[1] || match[2] || '').trim();
+      if (bName && bName !== actualDefaultBranch && !branches.some(b => b.name === bName)) {
+        branches.push({
+          name: bName,
+          isMain: false,
+          status: 'SYNCED',
+          latestSha: '',
+        });
+      }
+    }
+  });
+
+  if (branches.length === 0 && commits.length > 0) {
+    branches.push({
+      name: actualDefaultBranch,
+      isMain: true,
+      status: 'SYNCED',
+      latestSha: commits[0]?.oid || '',
+    });
+  }
+
   // Node CI Status tracking
   const shaToStatus = new Map<string, NodeCIStatus>();
   workflowRuns.forEach((run: { head_sha: string, conclusion: string, status: string }) => {
@@ -245,6 +272,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     }
   });
 
+  let pendingMergeBranch: string | null = null;
   const nodes: Array<{
     sha: string;
     branch: string;
@@ -252,19 +280,45 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     author: string;
     timestamp: string;
     ciStatus: NodeCIStatus;
-  }> = commits.map(commit => ({
-    sha: commit.oid,
-    branch: actualDefaultBranch,
-    message: commit.message.split('\n')[0],
-    author: commit.author?.user?.login || commit.author?.name || 'unknown',
-    timestamp: commit.committedDate,
-    ciStatus: shaToStatus.get(commit.oid) || 'PASSED'
-  }));
+  }> = [];
+
+  for (let i = 0; i < commits.length; i++) {
+    const commit = commits[i];
+    const firstLine = commit.message.split('\n')[0];
+    const mergeMatch = firstLine.match(mergeBranchRegex);
+
+    let commitBranch = actualDefaultBranch;
+    if (mergeMatch) {
+      commitBranch = actualDefaultBranch;
+      pendingMergeBranch = (mergeMatch[1] || mergeMatch[2] || '').trim();
+    } else if (pendingMergeBranch && i > 0) {
+      commitBranch = pendingMergeBranch;
+      pendingMergeBranch = null;
+    } else {
+      const matchedBranch = branches.find(b => b.latestSha === commit.oid && !b.isMain);
+      if (matchedBranch) {
+        commitBranch = matchedBranch.name;
+      }
+    }
+
+    nodes.push({
+      sha: commit.oid,
+      branch: commitBranch,
+      message: firstLine,
+      author: commit.author?.user?.login || commit.author?.name || 'unknown',
+      timestamp: commit.committedDate,
+      ciStatus: shaToStatus.get(commit.oid) || 'PASSED',
+    });
+  }
 
   for (const b of branches) {
     if (!b.latestSha) continue;
-    const hasBranchNode = nodes.some(n => n.branch === b.name);
-    if (!hasBranchNode) {
+    const existingNode = nodes.find(n => n.sha === b.latestSha);
+    if (existingNode) {
+      if (!b.isMain) {
+        existingNode.branch = b.name;
+      }
+    } else {
       const existing = commits.find(c => c.oid === b.latestSha);
       nodes.push({
         sha: b.latestSha,
