@@ -17,6 +17,8 @@ import {
 } from './git-graph/types';
 import { computeGraphLayout } from './git-graph/graph-layout';
 import { GitGraphTracks } from './git-graph/GitGraphTracks';
+import { StickyMainBranchBar } from './git-graph/StickyMainBranchBar';
+import { CommitDetailPopover } from './git-graph/CommitDetailPopover';
 
 export interface GitBranchGraphProps {
   gitBranchGraph?: TelemetrySummaryDTO['gitBranchGraph'];
@@ -32,10 +34,25 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
   const rawNodes: CommitNode[] = useMemo(() => gitBranchGraph?.nodes ?? [], [gitBranchGraph?.nodes]);
   const hasData = rawBranches.length > 0 || rawNodes.length > 0;
 
-  const mainBranchName = useMemo(() => {
-    const mainBranch = rawBranches.find((b) => b.isMain);
-    return mainBranch?.name ?? 'main';
+  const mainBranch = useMemo(() => {
+    return (
+      rawBranches.find((b) => b.isMain) ??
+      rawBranches.find((b) => b.name === 'main' || b.name === 'master') ??
+      rawBranches[0]
+    );
   }, [rawBranches]);
+
+  const mainBranchName = useMemo(() => {
+    return mainBranch?.name ?? 'main';
+  }, [mainBranch]);
+
+  const mainCommit = useMemo(() => {
+    if (mainBranch?.latestSha) {
+      const found = rawNodes.find((n) => n.sha === mainBranch.latestSha);
+      if (found) return found;
+    }
+    return rawNodes.find((n) => n.branch === mainBranchName) ?? rawNodes[0];
+  }, [mainBranch, rawNodes, mainBranchName]);
 
   const { branchLanes, totalLanes, processedNodes, pathSegments } = useMemo(() => {
     return computeGraphLayout(rawNodes, rawBranches, mainBranchName);
@@ -43,6 +60,7 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
 
   const svgWidth = Math.max(64, totalLanes * LANE_WIDTH + LANE_OFFSET + 12);
   const totalHeight = Math.max(ROW_HEIGHT * 6, processedNodes.length * ROW_HEIGHT);
+  const contentMinWidth = Math.max(720, svgWidth + 520);
 
   return (
     <div
@@ -76,7 +94,7 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
 
       <div className="mt-3 relative w-full">
         {isLoading && !hasData ? (
-          <div className="flex h-[340px] flex-col justify-between p-2">
+          <div className="flex h-[380px] max-h-[420px] flex-col justify-between p-2">
             <div className="space-y-4 py-2">
               {['w-40', 'w-56', 'w-48', 'w-64', 'w-52'].map((w, i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -88,7 +106,7 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
             </div>
           </div>
         ) : !hasData ? (
-          <div className="flex h-[340px] flex-col items-center justify-center gap-1 text-center">
+          <div className="flex h-[380px] max-h-[420px] flex-col items-center justify-center gap-1 text-center">
             <span className="font-mono text-xs font-medium text-[var(--text-secondary)]">
               No branch topology data
             </span>
@@ -97,133 +115,110 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
             </span>
           </div>
         ) : (
-          <div className="relative h-[340px] overflow-y-auto overflow-x-hidden rounded-[4px] border border-[var(--panel-border-subtle)] bg-[var(--panel-surface)]">
-            <div className="flex w-full min-w-0" style={{ height: totalHeight }}>
-              <GitGraphTracks
-                width={svgWidth}
-                height={totalHeight}
-                pathSegments={pathSegments}
-                processedNodes={processedNodes}
-                hoveredSha={hoveredSha}
-                selectedSha={selectedNode?.sha}
+          <div className="custom-scrollbar relative h-[380px] max-h-[420px] overflow-auto rounded-[4px] border border-[var(--panel-border-subtle)] bg-[var(--panel-surface)]">
+            <div className="flex flex-col min-w-full" style={{ minWidth: contentMinWidth }}>
+              <StickyMainBranchBar
+                mainBranchName={mainBranchName}
+                mainBranch={mainBranch}
+                mainCommit={mainCommit}
+                contentMinWidth={contentMinWidth}
+                onSelectCommit={(sha) => {
+                  const node = processedNodes.find((n) => n.sha === sha);
+                  if (node) setSelectedNode(selectedNode?.sha === node.sha ? null : node);
+                }}
               />
 
-              <div className="flex-1 min-w-0 flex flex-col">
-                {processedNodes.map((node) => {
-                  const isHovered = hoveredSha === node.sha;
-                  const isSelected = selectedNode?.sha === node.sha;
+              <div className="flex w-full min-w-0" style={{ height: totalHeight }}>
+                <GitGraphTracks
+                  width={svgWidth}
+                  height={totalHeight}
+                  pathSegments={pathSegments}
+                  processedNodes={processedNodes}
+                  hoveredSha={hoveredSha}
+                  selectedSha={selectedNode?.sha}
+                />
 
-                  return (
-                    <div
-                      key={node.sha}
-                      style={{ height: ROW_HEIGHT }}
-                      onPointerEnter={() => setHoveredSha(node.sha)}
-                      onPointerLeave={() => setHoveredSha(null)}
-                      onClick={() => setSelectedNode(isSelected ? null : node)}
-                      className={clsx(
-                        'group flex items-center gap-2.5 px-2.5 transition-colors duration-100 cursor-pointer border-b border-[var(--panel-border-subtle)]/40',
-                        isSelected
-                          ? 'bg-[var(--panel-subtle)]'
-                          : isHovered
-                            ? 'bg-[var(--panel-subtle)]/60'
-                            : 'hover:bg-[var(--panel-subtle)]/40'
-                      )}
-                    >
-                      {node.branchHeads.map((bName) => {
-                        const lane = branchLanes.get(bName) ?? 0;
-                        const color = LANE_COLORS[lane % LANE_COLORS.length];
-                        return (
-                          <span
-                            key={bName}
-                            className="inline-flex items-center gap-1 shrink-0 rounded-[3px] px-1.5 py-0.5 font-mono text-[9px] font-semibold border"
-                            style={{
-                              backgroundColor: `${color}18`,
-                              borderColor: `${color}40`,
-                              color: color,
-                            }}
-                          >
-                            <svg
-                              className="w-2.5 h-2.5 shrink-0 opacity-80"
-                              viewBox="0 0 16 16"
-                              fill="currentColor"
-                            >
-                              <path d="M5 3.254V3.25a.75.75 0 1 1 1.5 0v.004a2.25 2.25 0 0 1-.75 4.372v3.748a2.25 2.25 0 1 1-1.5 0V7.626A2.25 2.25 0 0 1 5 3.254Zm-1.25.746a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm0 8a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm7.25-5a2.25 2.25 0 1 0-1.5 0v1.25a.75.75 0 0 1-.75.75h-1.5v1.5h1.5a2.25 2.25 0 0 0 2.25-2.25V7Zm0-1.25a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-                            </svg>
-                            <span>{truncateText(bName, 18)}</span>
-                          </span>
-                        );
-                      })}
+                <div className="flex-1 min-w-0 flex flex-col">
+                  {processedNodes.map((node) => {
+                    const isHovered = hoveredSha === node.sha;
+                    const isSelected = selectedNode?.sha === node.sha;
 
-                      <span
+                    return (
+                      <div
+                        key={node.sha}
+                        style={{ height: ROW_HEIGHT }}
+                        onPointerEnter={() => setHoveredSha(node.sha)}
+                        onPointerLeave={() => setHoveredSha(null)}
+                        onClick={() => setSelectedNode(isSelected ? null : node)}
                         className={clsx(
-                          'truncate font-sans text-xs font-medium flex-1 min-w-0',
-                          isHovered || isSelected
-                            ? 'text-[var(--text-primary)]'
-                            : 'text-[var(--text-primary)]/90'
+                          'group flex items-center gap-2.5 px-2.5 transition-colors duration-100 cursor-pointer border-b border-[var(--panel-border-subtle)]/40',
+                          isSelected
+                            ? 'bg-[var(--panel-subtle)]'
+                            : isHovered
+                              ? 'bg-[var(--panel-subtle)]/60'
+                              : 'hover:bg-[var(--panel-subtle)]/40'
                         )}
-                        title={node.message}
                       >
-                        {node.message}
-                      </span>
+                        {node.branchHeads.map((bName) => {
+                          const lane = branchLanes.get(bName) ?? 0;
+                          const color = LANE_COLORS[lane % LANE_COLORS.length];
+                          return (
+                            <span
+                              key={bName}
+                              className="inline-flex items-center gap-1 shrink-0 rounded-[3px] px-1.5 py-0.5 font-mono text-[9px] font-semibold border"
+                              style={{
+                                backgroundColor: `${color}18`,
+                                borderColor: `${color}40`,
+                                color: color,
+                              }}
+                            >
+                              <svg
+                                className="w-2.5 h-2.5 shrink-0 opacity-80"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                              >
+                                <path d="M5 3.254V3.25a.75.75 0 1 1 1.5 0v.004a2.25 2.25 0 0 1-.75 4.372v3.748a2.25 2.25 0 1 1-1.5 0V7.626A2.25 2.25 0 0 1 5 3.254Zm-1.25.746a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm0 8a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm7.25-5a2.25 2.25 0 1 0-1.5 0v1.25a.75.75 0 0 1-.75.75h-1.5v1.5h1.5a2.25 2.25 0 0 0 2.25-2.25V7Zm0-1.25a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                              </svg>
+                              <span>{truncateText(bName, 18)}</span>
+                            </span>
+                          );
+                        })}
 
-                      <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] truncate max-w-[85px] hidden sm:inline">
-                        @{node.author}
-                      </span>
+                        <span
+                          className={clsx(
+                            'truncate font-sans text-xs font-medium flex-1 min-w-[280px]',
+                            isHovered || isSelected
+                              ? 'text-[var(--text-primary)]'
+                              : 'text-[var(--text-primary)]/90'
+                          )}
+                          title={node.message}
+                        >
+                          {node.message}
+                        </span>
 
-                      <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] tabular-nums">
-                        {formatRelativeTime(node.timestamp)}
-                      </span>
+                        <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] truncate max-w-[85px]">
+                          @{node.author}
+                        </span>
 
-                      <span className="shrink-0 font-mono text-[10px] text-[var(--text-secondary)] rounded bg-[var(--panel-subtle)] px-1.5 py-0.5 border border-[var(--panel-border-subtle)] group-hover:border-[var(--panel-border)]">
-                        {node.sha.slice(0, 7)}
-                      </span>
-                    </div>
-                  );
-                })}
+                        <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] tabular-nums">
+                          {formatRelativeTime(node.timestamp)}
+                        </span>
+
+                        <span className="shrink-0 font-mono text-[10px] text-[var(--text-secondary)] rounded bg-[var(--panel-subtle)] px-1.5 py-0.5 border border-[var(--panel-border-subtle)] group-hover:border-[var(--panel-border)]">
+                          {node.sha.slice(0, 7)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {selectedNode && (
-              <div className="sticky bottom-2 left-2 right-2 z-20 m-2 rounded-[6px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-3 font-mono text-[11px] shadow-lg backdrop-blur">
-                <div className="flex items-center justify-between gap-2 border-b border-[var(--panel-border-subtle)] pb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-[var(--text-primary)]">
-                      #{selectedNode.sha.slice(0, 7)}
-                    </span>
-                    <span
-                      className="rounded-[3px] px-1.5 py-0.5 text-[9px] font-semibold uppercase"
-                      style={{
-                        backgroundColor: `${getCiColor(selectedNode.ciStatus)}20`,
-                        color: getCiColor(selectedNode.ciStatus),
-                      }}
-                    >
-                      {selectedNode.ciStatus}
-                    </span>
-                    <span
-                      className="rounded-[3px] px-1.5 py-0.5 text-[9px] font-medium"
-                      style={{
-                        backgroundColor: `${selectedNode.color}20`,
-                        color: selectedNode.color,
-                      }}
-                    >
-                      {selectedNode.branch}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setSelectedNode(null)}
-                    className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs px-1"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <p className="mt-1.5 font-sans text-xs text-[var(--text-primary)] leading-relaxed">
-                  {selectedNode.message}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[var(--text-muted)] border-t border-[var(--panel-border-subtle)] pt-1.5">
-                  <span>Author: @{selectedNode.author}</span>
-                  <span>{new Date(selectedNode.timestamp).toLocaleString()}</span>
-                </div>
-              </div>
+              <CommitDetailPopover
+                selectedNode={selectedNode}
+                onClose={() => setSelectedNode(null)}
+              />
             )}
           </div>
         )}
