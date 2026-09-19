@@ -39,14 +39,18 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
   const baseAdditions = randomInt(5000, 15000);
   const baseDeletions = randomInt(2000, 8000);
 
-  const branches = [
-    { name: 'main', isMain: true, status: 'SYNCED' as const, latestSha: 'a1b2c3d' },
-    { name: 'feature/dark-mode', isMain: false, status: 'AHEAD' as const, latestSha: 'b2c3d4e' },
-    { name: 'fix/auth-token', isMain: false, status: 'BEHIND' as const, latestSha: 'c3d4e5f' },
-    { name: 'feature/new-dashboard', isMain: false, status: 'CONFLICT' as const, latestSha: 'd4e5f6g' },
+  const shas = [
+    'a1b2c3d', 'b2c3d4e', 'c3d4e5f', 'd4e5f6g',
+    'e5f6g7h', 'f6g7h8i', '0a1b2c3', '1b2c3d4',
+    '2c3d4e5', '3d4e5f6', '4e5f6g7'
   ];
 
-  const shas = ['a1b2c3d', 'b2c3d4e', 'c3d4e5f', 'd4e5f6g', 'e5f6g7h', 'f6g7h8i'];
+  const branches = [
+    { name: 'main', isMain: true, status: 'SYNCED' as const, latestSha: shas[0] },
+    { name: 'feature/dark-mode', isMain: false, status: 'SYNCED' as const, latestSha: shas[5] },
+    { name: 'fix/auth-token', isMain: false, status: 'BEHIND' as const, latestSha: shas[7] },
+    { name: 'feature/new-dashboard', isMain: false, status: 'AHEAD' as const, latestSha: shas[10] },
+  ];
   const authors = ['alex.dev', 'sarah.engineer', 'bot-autofix', 'chris.codes'];
 
   const coverageHistory = Array.from({ length: 7 }, (_, i) => ({
@@ -109,35 +113,91 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
     gitBranchGraph: {
       nodes: [
         {
-          sha: shas[0],
-          branch: 'main',
-          message: 'Merge pull request #42 from feature/dark-mode',
-          author: authors[1],
-          timestamp: getIsoDate(1),
-          ciStatus: 'PASSED',
-        },
-        {
           sha: shas[1],
-          branch: 'feature/dark-mode',
-          message: 'feat: add color tokens for dark mode',
+          branch: 'main',
+          message: 'init: baseline project setup',
           author: authors[0],
-          timestamp: getIsoDate(2.5),
+          timestamp: getIsoDate(20),
           ciStatus: 'PASSED',
         },
         {
           sha: shas[2],
-          branch: 'fix/auth-token',
-          message: 'fix: refresh token rotation timing',
-          author: authors[3],
-          timestamp: getIsoDate(5),
-          ciStatus: 'FAILED',
+          branch: 'main',
+          message: 'chore(deps): bump dependencies',
+          author: authors[2],
+          timestamp: getIsoDate(16),
+          ciStatus: 'PASSED',
         },
         {
           sha: shas[3],
-          branch: 'feature/new-dashboard',
-          message: 'wip: dashboard layout grid',
+          branch: 'main',
+          message: 'feat(core): telemetry aggregator pipeline',
           author: authors[1],
-          timestamp: getIsoDate(12),
+          timestamp: getIsoDate(10),
+          ciStatus: 'PASSED',
+        },
+        {
+          sha: shas[4],
+          branch: 'feature/dark-mode',
+          message: 'feat(theme): dark mode color definitions',
+          author: authors[0],
+          timestamp: getIsoDate(8),
+          ciStatus: 'PASSED',
+        },
+        {
+          sha: shas[6],
+          branch: 'fix/auth-token',
+          message: 'refactor(auth): token expiration logic',
+          author: authors[3],
+          timestamp: getIsoDate(6),
+          ciStatus: 'PASSED',
+        },
+        {
+          sha: shas[5],
+          branch: 'feature/dark-mode',
+          message: 'fix(tokens): contrast adjustments in dark theme',
+          author: authors[0],
+          timestamp: getIsoDate(4.5),
+          ciStatus: 'PASSED',
+        },
+        {
+          sha: shas[7],
+          branch: 'fix/auth-token',
+          message: 'fix(auth): prevent race condition on refresh',
+          author: authors[3],
+          timestamp: getIsoDate(3.5),
+          ciStatus: 'FAILED',
+        },
+        {
+          sha: shas[8],
+          branch: 'main',
+          message: 'Merge pull request #42 from feature/dark-mode',
+          author: authors[1],
+          timestamp: getIsoDate(3),
+          ciStatus: 'PASSED',
+        },
+        {
+          sha: shas[9],
+          branch: 'feature/new-dashboard',
+          message: 'feat(ui): dynamic grid widget framework',
+          author: authors[1],
+          timestamp: getIsoDate(2),
+          ciStatus: 'PASSED',
+        },
+        {
+          sha: shas[0],
+          branch: 'main',
+          message: 'release: v2.1.0-alpha candidate',
+          author: authors[0],
+          timestamp: getIsoDate(1),
+          ciStatus: 'PASSED',
+        },
+        {
+          sha: shas[10],
+          branch: 'feature/new-dashboard',
+          message: 'wip(kpi): add sparkline live feeds',
+          author: authors[1],
+          timestamp: getIsoDate(0.5),
           ciStatus: 'RUNNING',
         },
       ],

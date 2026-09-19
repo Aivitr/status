@@ -30,6 +30,28 @@ export const GET_REPOSITORY_DATA = `
           }
         }
       }
+      refs(refPrefix: "refs/heads/", first: 10) {
+        nodes {
+          name
+          target {
+            ... on Commit {
+              history(first: 15) {
+                nodes {
+                  oid
+                  message
+                  committedDate
+                  author {
+                    user {
+                      login
+                    }
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       defaultBranchRef {
         name
         target {

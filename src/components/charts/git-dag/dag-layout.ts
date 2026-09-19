@@ -8,25 +8,31 @@ import type {
 } from './types';
 import { LANE_COLORS } from './types';
 
-const NODE_WIDTH = 156;
-const NODE_HEIGHT = 48;
+const NODE_WIDTH = 24;
+const NODE_HEIGHT = 24;
 const MERGE_REGEX = /Merge pull request #\d+ from (?:[\w-]+\/)?([^\s\n]+)|Merge branch '([^']+)'/i;
 
 export function computeDagLayout(
   rawNodes: CommitNode[],
   rawBranches: BranchItem[],
-  mainBranchName: string
+  mainBranchName: string,
+  visibleBranches?: Set<string>
 ): {
   nodes: GitFlowNode[];
   edges: GitFlowEdge[];
 } {
-  if (rawNodes.length === 0) {
+  const filteredRawNodes = rawNodes.filter((n) => {
+    if (n.branch === mainBranchName) return true;
+    if (!visibleBranches) return true;
+    return visibleBranches.has(n.branch);
+  });
+
+  if (filteredRawNodes.length === 0) {
     return { nodes: [], edges: [] };
   }
 
-  // 1. Deduplicate by SHA and sort chronologically (oldest to newest for LR layout)
   const uniqueMap = new Map<string, CommitNode>();
-  for (const n of rawNodes) {
+  for (const n of filteredRawNodes) {
     if (!uniqueMap.has(n.sha)) {
       uniqueMap.set(n.sha, n);
     }
@@ -38,21 +44,23 @@ export function computeDagLayout(
     return tA !== tB ? tA - tB : 0;
   });
 
-  // 2. Assign consistent colors to branches
+  const filteredBranches = rawBranches.filter(
+    (b) => b.isMain || !visibleBranches || visibleBranches.has(b.name)
+  );
+
   const branchColorMap = new Map<string, string>();
   branchColorMap.set(mainBranchName, LANE_COLORS[0]);
 
   let colorIdx = 1;
-  for (const b of rawBranches) {
+  for (const b of filteredBranches) {
     if (b.name !== mainBranchName && !branchColorMap.has(b.name)) {
       branchColorMap.set(b.name, LANE_COLORS[colorIdx % LANE_COLORS.length]);
       colorIdx++;
     }
   }
 
-  // Also collect branch head SHAs
   const headShaToBranches = new Map<string, string[]>();
-  for (const b of rawBranches) {
+  for (const b of filteredBranches) {
     if (b.latestSha) {
       const existing = headShaToBranches.get(b.latestSha) || [];
       existing.push(b.name);
@@ -60,19 +68,17 @@ export function computeDagLayout(
     }
   }
 
-  // 3. Initialize Dagre graph (Left-to-Right layout)
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({
     rankdir: 'LR',
     align: 'UL',
-    nodesep: 24,
-    ranksep: 48,
-    marginx: 20,
-    marginy: 20,
+    nodesep: 28,
+    ranksep: 36,
+    marginx: 24,
+    marginy: 24,
   });
 
-  // 4. Add nodes to Dagre
   const nodeDataMap = new Map<string, CommitNodeData>();
 
   for (const node of nodes) {
@@ -104,9 +110,8 @@ export function computeDagLayout(
     });
   }
 
-  // 5. Create realistic Git lineage edges
   const edges: GitFlowEdge[] = [];
-  const branchLastNode = new Map<string, string>(); // branch -> last sha
+  const branchLastNode = new Map<string, string>();
 
   for (let i = 0; i < nodes.length; i++) {
     const current = nodes[i];
@@ -115,7 +120,6 @@ export function computeDagLayout(
     const isMain = branch === mainBranchName;
     const mergeMatch = current.message.match(MERGE_REGEX);
 
-    // If there's a previous commit on the same branch, connect it
     const lastShaOnBranch = branchLastNode.get(branch);
     if (lastShaOnBranch) {
       const sourceId = `commit-${lastShaOnBranch}`;
@@ -129,14 +133,13 @@ export function computeDagLayout(
         type: 'smoothstep',
         animated: current.ciStatus === 'RUNNING',
         style: {
-          stroke: color,
+          stroke: isMain ? '#2563eb' : color,
           strokeWidth: isMain ? 2.5 : 1.75,
-          opacity: 0.85,
+          opacity: isMain ? 1 : 0.85,
         },
       });
-      dagreGraph.setEdge(sourceId, currentId);
+      dagreGraph.setEdge(sourceId, currentId, { weight: isMain ? 10 : 1, minlen: 1 });
     } else if (!isMain) {
-      // First commit of a feature branch: branch out from latest main commit
       const lastMainSha = branchLastNode.get(mainBranchName);
       if (lastMainSha) {
         const sourceId = `commit-${lastMainSha}`;
@@ -155,17 +158,14 @@ export function computeDagLayout(
             opacity: 0.75,
           },
         });
-        dagreGraph.setEdge(sourceId, currentId);
+        dagreGraph.setEdge(sourceId, currentId, { weight: 1, minlen: 1 });
       }
     }
 
-    // If it's a merge commit (PR merged into main)
     if (mergeMatch && isMain) {
       const mergedBranchName = (mergeMatch[1] || mergeMatch[2] || '').trim();
-      // Find the last commit on the merged branch
       let mergedSha = branchLastNode.get(mergedBranchName);
       if (!mergedSha) {
-        // Try fuzzy suffix match
         for (const [bName, s] of branchLastNode.entries()) {
           if (bName.endsWith(mergedBranchName) || mergedBranchName.endsWith(bName)) {
             mergedSha = s;
@@ -190,17 +190,15 @@ export function computeDagLayout(
             opacity: 0.9,
           },
         });
-        dagreGraph.setEdge(sourceId, currentId);
+        dagreGraph.setEdge(sourceId, currentId, { weight: 1, minlen: 1 });
       }
     }
 
     branchLastNode.set(branch, current.sha);
   }
 
-  // 6. Run Dagre calculation
   dagre.layout(dagreGraph);
 
-  // 7. Extract positioned nodes for React Flow
   const flowNodes: GitFlowNode[] = [];
   for (const node of nodes) {
     const id = `commit-${node.sha}`;

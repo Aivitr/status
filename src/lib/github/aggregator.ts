@@ -37,6 +37,26 @@ interface GraphqlResponse {
         } | null;
       }>;
     };
+    refs?: {
+      nodes: Array<{
+        name: string;
+        target: {
+          history?: {
+            nodes: Array<{
+              oid: string;
+              message: string;
+              committedDate: string;
+              author: {
+                user: {
+                  login: string;
+                } | null;
+                name: string;
+              } | null;
+            }>;
+          };
+        } | null;
+      }>;
+    } | null;
     defaultBranchRef: {
       name: string;
       target: {
@@ -254,6 +274,23 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     }
   });
 
+  const refNodes = repository?.refs?.nodes || [];
+  for (const ref of refNodes) {
+    const refName = ref.name;
+    const refTipSha = ref.target?.history?.nodes?.[0]?.oid || '';
+    const existing = branches.find(b => b.name === refName);
+    if (!existing) {
+      branches.push({
+        name: refName,
+        isMain: refName === actualDefaultBranch,
+        status: 'SYNCED',
+        latestSha: refTipSha,
+      });
+    } else if (!existing.latestSha && refTipSha) {
+      existing.latestSha = refTipSha;
+    }
+  }
+
   if (branches.length === 0 && commits.length > 0) {
     branches.push({
       name: actualDefaultBranch,
@@ -272,16 +309,15 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     }
   });
 
-  let pendingMergeBranch: string | null = null;
-  const nodes: Array<{
+  const commitMap = new Map<string, {
     sha: string;
     branch: string;
     message: string;
     author: string;
     timestamp: string;
-    ciStatus: NodeCIStatus;
-  }> = [];
+  }>();
 
+  let pendingMergeBranch: string | null = null;
   for (let i = 0; i < commits.length; i++) {
     const commit = commits[i];
     const firstLine = commit.message.split('\n')[0];
@@ -301,15 +337,46 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
       }
     }
 
-    nodes.push({
+    commitMap.set(commit.oid, {
       sha: commit.oid,
       branch: commitBranch,
       message: firstLine,
       author: commit.author?.user?.login || commit.author?.name || 'unknown',
       timestamp: commit.committedDate,
-      ciStatus: shaToStatus.get(commit.oid) || 'PASSED',
     });
   }
+
+  for (const ref of refNodes) {
+    const branchName = ref.name;
+    const branchCommits = ref.target?.history?.nodes || [];
+    for (const c of branchCommits) {
+      if (!commitMap.has(c.oid)) {
+        commitMap.set(c.oid, {
+          sha: c.oid,
+          branch: branchName,
+          message: c.message.split('\n')[0],
+          author: c.author?.user?.login || c.author?.name || 'unknown',
+          timestamp: c.committedDate,
+        });
+      }
+    }
+  }
+
+  const nodes: Array<{
+    sha: string;
+    branch: string;
+    message: string;
+    author: string;
+    timestamp: string;
+    ciStatus: NodeCIStatus;
+  }> = Array.from(commitMap.values()).map(c => ({
+    sha: c.sha,
+    branch: c.branch,
+    message: c.message,
+    author: c.author,
+    timestamp: c.timestamp,
+    ciStatus: shaToStatus.get(c.sha) || 'PASSED',
+  }));
 
   for (const b of branches) {
     if (!b.latestSha) continue;
