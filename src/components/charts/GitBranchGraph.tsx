@@ -32,6 +32,11 @@ function formatTimeTick(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
+function truncateBranchName(name: string, maxLen: number): string {
+  if (name.length <= maxLen) return name;
+  return `${name.slice(0, maxLen - 1)}…`;
+}
+
 function BranchGraphInner({
   width,
   height,
@@ -45,43 +50,62 @@ function BranchGraphInner({
 }) {
   const [hoveredNode, setHoveredNode] = useState<{ node: CommitNode; x: number; y: number } | null>(null);
 
-  const isNarrow = width < 480;
-  const margin = { top: 20, right: 28, bottom: 24, left: isNarrow ? 120 : 168 };
+  const isNarrow = width < 520;
+  const margin = { top: 20, right: 28, bottom: 24, left: isNarrow ? 150 : 220 };
   const innerW = Math.max(0, width - margin.left - margin.right);
   const innerH = Math.max(0, height - margin.top - margin.bottom);
 
-  const sortedBranches = useMemo(
-    () => [...branches].sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0)),
-    [branches]
-  );
+  const effectiveNodes = useMemo(() => {
+    const result = [...nodes];
+    for (const branch of branches) {
+      if (!branch.latestSha) continue;
+      const branchCommits = result.filter((n) => n.branch === branch.name);
+      const hasLatest = branchCommits.some((n) => n.sha === branch.latestSha);
+      if (!hasLatest) {
+        const existing = nodes.find((n) => n.sha === branch.latestSha);
+        result.push({
+          sha: branch.latestSha,
+          branch: branch.name,
+          message: existing?.message ?? `Head of ${branch.name}`,
+          author: existing?.author ?? 'unknown',
+          timestamp: existing?.timestamp ?? (branchCommits[branchCommits.length - 1]?.timestamp ?? new Date().toISOString()),
+          ciStatus: existing?.ciStatus ?? 'PASSED',
+        });
+      }
+    }
+    return result;
+  }, [nodes, branches]);
 
+  const sortedBranches = useMemo(() => [...branches].sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0)), [branches]);
   const branchNames = useMemo(() => sortedBranches.map((b) => b.name), [sortedBranches]);
-
-  const yScale = useMemo(
-    () => scalePoint<string>({ domain: branchNames, range: [12, Math.max(12, innerH - 12)], padding: 0.5 }),
-    [branchNames, innerH]
-  );
+  const yScale = useMemo(() => scalePoint<string>({ domain: branchNames, range: [16, Math.max(16, innerH - 16)], padding: 0.5 }), [branchNames, innerH]);
 
   const xScale = useMemo(() => {
-    const times = nodes.map((n) => new Date(n.timestamp).getTime()).filter((t) => !isNaN(t));
+    const times = effectiveNodes.map((n) => new Date(n.timestamp).getTime()).filter((t) => !isNaN(t));
     const minT = times.length > 0 ? Math.min(...times) : 0;
     const maxT = times.length > 0 ? Math.max(...times) : 86400000;
     const span = Math.max(maxT - minT, 3600000 * 3);
     const pad = span * 0.12;
-    return scaleTime({ domain: new Date(minT - pad) < new Date(maxT + pad) ? [new Date(minT - pad), new Date(maxT + pad)] : [new Date(0), new Date(86400000)], range: [0, innerW] });
-  }, [nodes, innerW]);
+    return scaleTime({
+      domain: new Date(minT - pad) < new Date(maxT + pad) ? [new Date(minT - pad), new Date(maxT + pad)] : [new Date(0), new Date(86400000)],
+      range: [0, innerW],
+    });
+  }, [effectiveNodes, innerW]);
 
-  const mainY = yScale(sortedBranches[0]?.name) ?? 12;
+  const mainY = yScale(sortedBranches[0]?.name) ?? 16;
+  const badgeWidth = isNarrow ? 40 : 48;
+  const badgeX = -8 - badgeWidth;
+  const textX = -margin.left + 4;
+  const maxChars = isNarrow ? 10 : 18;
 
   return (
     <div className="relative h-full w-full select-none">
       <svg width={width} height={height} className="overflow-visible" onPointerLeave={() => setHoveredNode(null)}>
         <Group left={margin.left} top={margin.top}>
-          {/* Branch Lanes */}
           {sortedBranches.map((branch) => {
             const laneY = yScale(branch.name) ?? 0;
             const badge = STATUS_CONFIG[branch.status] ?? STATUS_CONFIG.SYNCED;
-            const branchNodes = nodes.filter((n) => n.branch === branch.name);
+            const branchNodes = effectiveNodes.filter((n) => n.branch === branch.name);
             const branchTimes = branchNodes.map((n) => xScale(new Date(n.timestamp)) ?? 0);
             const minX = branchTimes.length > 0 ? Math.min(...branchTimes) : 0;
             const maxX = branchTimes.length > 0 ? Math.max(...branchTimes) : innerW;
@@ -89,23 +113,22 @@ function BranchGraphInner({
 
             return (
               <g key={branch.name}>
-                {/* Branch name label */}
                 <text
-                  x={-margin.left + 4}
+                  x={textX}
                   y={laneY + 3.5}
                   fill="var(--text-primary)"
                   fontSize={10}
                   fontFamily="var(--font-mono)"
                   fontWeight={branch.isMain ? 700 : 500}
                 >
-                  {isNarrow && branch.name.length > 10 ? `${branch.name.slice(0, 9)}…` : branch.name}
+                  <title>{branch.name}</title>
+                  {truncateBranchName(branch.name, maxChars)}
                 </text>
 
-                {/* Branch status badge */}
-                <g transform={`translate(${isNarrow ? -margin.left + 72 : -margin.left + 104}, ${laneY - 7})`}>
-                  <rect width={isNarrow ? 40 : 50} height={14} rx={3} fill={badge.bg} stroke={badge.border} strokeWidth={1} />
+                <g transform={`translate(${badgeX}, ${laneY - 7})`}>
+                  <rect width={badgeWidth} height={14} rx={3} fill={badge.bg} stroke={badge.border} strokeWidth={1} />
                   <text
-                    x={isNarrow ? 20 : 25}
+                    x={badgeWidth / 2}
                     y={10}
                     textAnchor="middle"
                     fill={badge.color}
@@ -117,10 +140,8 @@ function BranchGraphInner({
                   </text>
                 </g>
 
-                {/* Base branch lane guide */}
                 <line x1={0} x2={innerW} y1={laneY} y2={laneY} stroke="var(--panel-border-subtle)" strokeWidth={1.5} strokeDasharray={branch.isMain ? undefined : '3 3'} opacity={0.6} />
 
-                {/* Fork curved link from main branch */}
                 {!branch.isMain && branchTimes.length > 0 && (
                   <path
                     d={`M ${Math.max(0, minX - 22)} ${mainY} C ${minX - 10} ${mainY}, ${minX - 10} ${laneY}, ${minX} ${laneY}`}
@@ -132,7 +153,6 @@ function BranchGraphInner({
                   />
                 )}
 
-                {/* Active segment line connecting commits */}
                 {branchTimes.length > 0 && (
                   <line x1={minX} x2={Math.min(innerW, maxX + 16)} y1={laneY} y2={laneY} stroke={activeColor} strokeWidth={2} opacity={0.9} />
                 )}
@@ -140,25 +160,26 @@ function BranchGraphInner({
             );
           })}
 
-          {/* Commit Nodes */}
-          {nodes.map((node) => {
+          {effectiveNodes.map((node) => {
             const cx = xScale(new Date(node.timestamp)) ?? 0;
             const cy = yScale(node.branch) ?? mainY;
             const color = getCiColor(node.ciStatus);
             const isHovered = hoveredNode?.node.sha === node.sha;
 
             return (
-              <g key={node.sha} className="cursor-pointer" onPointerEnter={() => setHoveredNode({ node, x: cx, y: cy })}>
-                {node.ciStatus === 'RUNNING' && <circle cx={cx} cy={cy} r={7} fill="none" stroke="var(--status-running)" strokeWidth={1.5} opacity={0.7} />}
+              <g
+                key={`${node.branch}-${node.sha}`}
+                className="cursor-pointer"
+                onPointerEnter={() => setHoveredNode({ node, x: cx, y: cy })}
+              >
+                {node.ciStatus === 'RUNNING' && (
+                  <circle cx={cx} cy={cy} r={7} fill="none" stroke="var(--status-running)" strokeWidth={1.5} opacity={0.7} />
+                )}
                 <circle cx={cx} cy={cy} r={isHovered ? 5.5 : 4} fill={color} stroke="var(--panel-surface)" strokeWidth={2} />
-                <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-muted)" fontSize={8} fontFamily="var(--font-mono)" className="tabular-nums">
-                  {node.sha.slice(0, 6)}
-                </text>
               </g>
             );
           })}
 
-          {/* Bottom time scale */}
           <AxisBottom
             top={innerH}
             scale={xScale}
@@ -197,6 +218,7 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
   const branches = gitBranchGraph?.branches ?? [];
   const nodes = gitBranchGraph?.nodes ?? [];
   const hasData = branches.length > 0 || nodes.length > 0;
+  const graphHeight = Math.max(220, branches.length * 28 + 48);
 
   return (
     <div className={clsx('flex flex-col rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 shadow-none', className)}>
@@ -219,22 +241,16 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
         )}
       </div>
 
-      <div className="mt-3 h-52 w-full">
+      <div className="mt-3 w-full" style={{ height: hasData ? graphHeight : 208 }}>
         {isLoading && !hasData ? (
           <div className="flex h-full flex-col justify-between p-2">
             <div className="space-y-4 py-2">
-              <div className="flex items-center gap-3">
-                <div className="skeleton h-3 w-20 rounded-[2px]" />
-                <div className="skeleton h-1 flex-1 rounded-[1px]" />
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="skeleton h-3 w-28 rounded-[2px]" />
-                <div className="skeleton h-1 flex-1 rounded-[1px]" />
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="skeleton h-3 w-24 rounded-[2px]" />
-                <div className="skeleton h-1 flex-1 rounded-[1px]" />
-              </div>
+              {['w-20', 'w-28', 'w-24'].map((w, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className={clsx('skeleton h-3 rounded-[2px]', w)} />
+                  <div className="skeleton h-1 flex-1 rounded-[1px]" />
+                </div>
+              ))}
             </div>
             <div className="skeleton h-2 w-full rounded-[2px]" />
           </div>
@@ -245,7 +261,7 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
           </div>
         ) : (
           <ParentSize debounceTime={10}>
-            {({ width, height }) => width > 0 && height > 0 ? <BranchGraphInner width={width} height={height} branches={branches} nodes={nodes} /> : null}
+            {({ width, height }) => (width > 0 && height > 0 ? <BranchGraphInner width={width} height={height} branches={branches} nodes={nodes} /> : null)}
           </ParentSize>
         )}
       </div>

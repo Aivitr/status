@@ -10,8 +10,8 @@ export function useTelemetry(projectId: string) {
     projectId ? `/api/telemetry/${projectId}` : null,
     fetcher,
     {
-      refreshInterval: 15000,
-      revalidateOnFocus: true,
+      refreshInterval: 30000,
+      revalidateOnFocus: false,
       revalidateOnReconnect: true,
     }
   );

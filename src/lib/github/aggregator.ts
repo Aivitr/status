@@ -73,9 +73,10 @@ function mapToNodeCIStatus(ciStatus: CIStatus): NodeCIStatus {
 }
 
 function mapCompareStatus(status: string): BranchStatus {
-  if (status === 'ahead') return 'AHEAD';
-  if (status === 'behind') return 'BEHIND';
-  if (status === 'diverged') return 'CONFLICT';
+  const s = status.trim().toLowerCase();
+  if (s === 'ahead') return 'AHEAD';
+  if (s === 'behind') return 'BEHIND';
+  if (s === 'diverged' || s === 'conflict' || s === 'conflicted') return 'CONFLICT';
   return 'SYNCED'; // identical
 }
 
@@ -204,6 +205,8 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     };
   }
 
+  const actualDefaultBranch = repository?.defaultBranchRef?.name || defaultBranch;
+
   // Branch Status
   const branches: Array<{
     name: string;
@@ -215,11 +218,11 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   const rawBranches = Array.isArray(branchesData) ? branchesData : [];
   for (const b of rawBranches) {
     const bName = b.name;
-    const isMain = bName === defaultBranch || bName === repository?.defaultBranchRef?.name;
+    const isMain = bName === actualDefaultBranch;
     
     let status: BranchStatus = 'SYNCED';
     if (!isMain) {
-      const compareData = await compareCommits(config, owner, repo, defaultBranch, bName);
+      const compareData = await compareCommits(config, owner, repo, actualDefaultBranch, bName);
       if (compareData && compareData.status) {
         status = mapCompareStatus(compareData.status);
       }
@@ -242,14 +245,37 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     }
   });
 
-  const nodes = commits.map(commit => ({
+  const nodes: Array<{
+    sha: string;
+    branch: string;
+    message: string;
+    author: string;
+    timestamp: string;
+    ciStatus: NodeCIStatus;
+  }> = commits.map(commit => ({
     sha: commit.oid,
-    branch: defaultBranch,
+    branch: actualDefaultBranch,
     message: commit.message.split('\n')[0],
     author: commit.author?.user?.login || commit.author?.name || 'unknown',
     timestamp: commit.committedDate,
     ciStatus: shaToStatus.get(commit.oid) || 'PASSED'
   }));
+
+  for (const b of branches) {
+    if (!b.latestSha) continue;
+    const hasBranchNode = nodes.some(n => n.branch === b.name);
+    if (!hasBranchNode) {
+      const existing = commits.find(c => c.oid === b.latestSha);
+      nodes.push({
+        sha: b.latestSha,
+        branch: b.name,
+        message: existing ? existing.message.split('\n')[0] : `Tip of ${b.name}`,
+        author: existing ? (existing.author?.user?.login || existing.author?.name || 'unknown') : 'unknown',
+        timestamp: existing ? existing.committedDate : new Date().toISOString(),
+        ciStatus: shaToStatus.get(b.latestSha) || 'PASSED',
+      });
+    }
+  }
 
   const latestWorkflow = latestRun ? {
     id: latestRun.id,
