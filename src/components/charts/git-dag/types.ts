@@ -1,5 +1,4 @@
 import type { TelemetrySummaryDTO, NodeCIStatus } from '@/lib/types/telemetry';
-import type { Node, Edge } from '@xyflow/react';
 
 export type CommitNode = TelemetrySummaryDTO['gitBranchGraph']['nodes'][number];
 export type BranchItem = TelemetrySummaryDTO['gitBranchGraph']['branches'][number];
@@ -32,8 +31,59 @@ export interface CommitNodeData extends Record<string, unknown> {
   isSelected?: boolean;
 }
 
-export type GitFlowNode = Node<CommitNodeData, 'commit'>;
-export type GitFlowEdge = Edge;
+export interface GraphCommitNode extends CommitNodeData {
+  x: number;
+  y: number;
+  laneIndex: number;
+  mergeInfo?: {
+    mergedBranchName: string;
+    prNumber?: string;
+  } | null;
+}
+
+export interface GraphForkCurve {
+  id: string;
+  branch: string;
+  color: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  pathD: string;
+}
+
+export interface GraphMergeCurve {
+  id: string;
+  branch: string;
+  color: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  pathD: string;
+  prNumber?: string;
+}
+
+export interface GraphBranchTrack {
+  name: string;
+  color: string;
+  isMain: boolean;
+  y: number;
+  laneIndex: number;
+  startX: number;
+  endX: number;
+  hasCommits: boolean;
+  status?: string;
+}
+
+export interface GraphLayoutResult {
+  width: number;
+  height: number;
+  lanes: GraphBranchTrack[];
+  commitNodes: GraphCommitNode[];
+  forkCurves: GraphForkCurve[];
+  mergeCurves: GraphMergeCurve[];
+}
 
 export function getCiColor(status: NodeCIStatus): string {
   if (status === 'PASSED') return 'var(--status-success)';
