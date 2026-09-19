@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@gitgraph/js": "^1.4.0",
+    "@gitgraph/react": "^1.6.0",
     "@octokit/graphql": "^9.0.5",
     "@upstash/redis": "^1.38.4",
     "@visx/axis": "^4.0.0",

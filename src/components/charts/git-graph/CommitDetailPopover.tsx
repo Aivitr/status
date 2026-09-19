@@ -9,6 +9,7 @@ export interface CommitDetailPopoverProps {
 }
 
 export function CommitDetailPopover({ selectedNode, onClose }: CommitDetailPopoverProps) {
+  const branchColor = selectedNode.color || '#2563eb';
   return (
     <div className="sticky bottom-2 left-2 z-20 m-2 w-[calc(100%-16px)] max-w-[500px] rounded-[6px] border border-[var(--panel-border)] bg-[var(--panel-surface)]/95 p-3 font-mono text-[11px] shadow-xl backdrop-blur-md">
       <div className="flex items-center justify-between gap-2 border-b border-[var(--panel-border-subtle)] pb-1.5">
@@ -28,8 +29,8 @@ export function CommitDetailPopover({ selectedNode, onClose }: CommitDetailPopov
           <span
             className="rounded-[3px] px-1.5 py-0.5 text-[9px] font-medium"
             style={{
-              backgroundColor: `${selectedNode.color}20`,
-              color: selectedNode.color,
+              backgroundColor: `${branchColor}20`,
+              color: branchColor,
             }}
           >
             {selectedNode.branch}

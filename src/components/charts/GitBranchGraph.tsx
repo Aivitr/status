@@ -1,24 +1,20 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { Gitgraph, Orientation } from '@gitgraph/react';
 import type { TelemetrySummaryDTO } from '@/lib/types/telemetry';
 import {
   type CommitNode,
   type BranchItem,
   type ProcessedNode,
   LANE_COLORS,
-  ROW_HEIGHT,
-  LANE_WIDTH,
-  LANE_OFFSET,
-  getCiColor,
-  formatRelativeTime,
   truncateText,
 } from './git-graph/types';
-import { computeGraphLayout } from './git-graph/graph-layout';
-import { GitGraphTracks } from './git-graph/GitGraphTracks';
 import { StickyMainBranchBar } from './git-graph/StickyMainBranchBar';
 import { CommitDetailPopover } from './git-graph/CommitDetailPopover';
+import { createMetroTemplate } from './git-graph/metro-theme';
+import { buildGitTopology, type GitgraphApi } from './git-graph/topology-builder';
 
 export interface GitBranchGraphProps {
   gitBranchGraph?: TelemetrySummaryDTO['gitBranchGraph'];
@@ -26,8 +22,19 @@ export interface GitBranchGraphProps {
   className?: string;
 }
 
+const emptySubscribe = () => () => {};
+
+function useIsMounted() {
+  return React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }: GitBranchGraphProps) {
-  const [hoveredSha, setHoveredSha] = useState<string | null>(null);
+  const mounted = useIsMounted();
+  const [, setHoveredSha] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<ProcessedNode | null>(null);
 
   const rawBranches: BranchItem[] = useMemo(() => gitBranchGraph?.branches ?? [], [gitBranchGraph?.branches]);
@@ -42,9 +49,7 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
     );
   }, [rawBranches]);
 
-  const mainBranchName = useMemo(() => {
-    return mainBranch?.name ?? 'main';
-  }, [mainBranch]);
+  const mainBranchName = useMemo(() => mainBranch?.name ?? 'main', [mainBranch]);
 
   const mainCommit = useMemo(() => {
     if (mainBranch?.latestSha) {
@@ -54,13 +59,69 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
     return rawNodes.find((n) => n.branch === mainBranchName) ?? rawNodes[0];
   }, [mainBranch, rawNodes, mainBranchName]);
 
-  const { branchLanes, totalLanes, processedNodes, pathSegments } = useMemo(() => {
-    return computeGraphLayout(rawNodes, rawBranches, mainBranchName);
-  }, [rawNodes, rawBranches, mainBranchName]);
+  const chronologicalNodes = useMemo(() => {
+    return [...rawNodes].sort((a, b) => {
+      const tA = new Date(a.timestamp).getTime();
+      const tB = new Date(b.timestamp).getTime();
+      return tA !== tB ? tA - tB : 0;
+    });
+  }, [rawNodes]);
 
-  const svgWidth = Math.max(64, totalLanes * LANE_WIDTH + LANE_OFFSET + 12);
-  const totalHeight = Math.max(ROW_HEIGHT * 6, processedNodes.length * ROW_HEIGHT);
-  const contentMinWidth = Math.max(720, svgWidth + 520);
+  const branchesWithColor = useMemo(() => {
+    const branchNames = new Set<string>();
+    branchNames.add(mainBranchName);
+    rawBranches.forEach((b) => branchNames.add(b.name));
+    rawNodes.forEach((n) => branchNames.add(n.branch));
+
+    const sortedFeatures = Array.from(branchNames)
+      .filter((b) => b !== mainBranchName)
+      .sort((a, b) => a.localeCompare(b));
+
+    const result: Array<{ name: string; isMain: boolean; color: string }> = [
+      { name: mainBranchName, isMain: true, color: LANE_COLORS[0] },
+    ];
+    sortedFeatures.forEach((name, i) => {
+      result.push({
+        name,
+        isMain: false,
+        color: LANE_COLORS[(i + 1) % LANE_COLORS.length],
+      });
+    });
+    return result;
+  }, [rawBranches, rawNodes, mainBranchName]);
+
+  const metroTemplate = useMemo(() => createMetroTemplate(), []);
+
+  const handleSelectCommit = useCallback(
+    (sha: string) => {
+      const found = rawNodes.find((n) => n.sha === sha);
+      if (found) {
+        const branchColor =
+          branchesWithColor.find((b) => b.name === found.branch)?.color ?? LANE_COLORS[0];
+        setSelectedNode((prev) => (prev?.sha === sha ? null : { ...found, color: branchColor }));
+      }
+    },
+    [rawNodes, branchesWithColor]
+  );
+
+  const renderGraph = useCallback(
+    (gitgraph: GitgraphApi) => {
+      buildGitTopology({
+        gitgraph,
+        chronologicalNodes,
+        mainBranchName,
+        onSelectCommit: handleSelectCommit,
+        onHoverCommit: setHoveredSha,
+      });
+    },
+    [chronologicalNodes, mainBranchName, handleSelectCommit]
+  );
+
+  const graphKey = useMemo(() => {
+    const shas = rawNodes.map((n) => n.sha).join('-');
+    const branchNames = rawBranches.map((b) => `${b.name}:${b.latestSha}`).join('-');
+    return `${mainBranchName}-${shas}-${branchNames}`;
+  }, [rawNodes, rawBranches, mainBranchName]);
 
   return (
     <div
@@ -86,15 +147,15 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
             </div>
             <div className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-              <span>{processedNodes.length} commits</span>
+              <span>{rawNodes.length} commits</span>
             </div>
           </div>
         )}
       </div>
 
       <div className="mt-3 relative w-full">
-        {isLoading && !hasData ? (
-          <div className="flex h-[380px] max-h-[420px] flex-col justify-between p-2">
+        {isLoading || !mounted ? (
+          <div className="flex h-[280px] flex-col justify-between p-4">
             <div className="space-y-4 py-2">
               {['w-40', 'w-56', 'w-48', 'w-64', 'w-52'].map((w, i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -106,7 +167,7 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
             </div>
           </div>
         ) : !hasData ? (
-          <div className="flex h-[380px] max-h-[420px] flex-col items-center justify-center gap-1 text-center">
+          <div className="flex h-[280px] flex-col items-center justify-center gap-1 text-center">
             <span className="font-mono text-xs font-medium text-[var(--text-secondary)]">
               No branch topology data
             </span>
@@ -115,111 +176,73 @@ export function GitBranchGraph({ gitBranchGraph, isLoading = false, className }:
             </span>
           </div>
         ) : (
-          <div className="custom-scrollbar relative h-[380px] max-h-[420px] overflow-auto rounded-[4px] border border-[var(--panel-border-subtle)] bg-[var(--panel-surface)]">
-            <div className="flex flex-col min-w-full" style={{ minWidth: contentMinWidth }}>
-              <StickyMainBranchBar
-                mainBranchName={mainBranchName}
-                mainBranch={mainBranch}
-                mainCommit={mainCommit}
-                contentMinWidth={contentMinWidth}
-                onSelectCommit={(sha) => {
-                  const node = processedNodes.find((n) => n.sha === sha);
-                  if (node) setSelectedNode(selectedNode?.sha === node.sha ? null : node);
-                }}
-              />
+          <div className="flex flex-col rounded-[4px] border border-[var(--panel-border-subtle)] overflow-hidden">
+            <StickyMainBranchBar
+              mainBranchName={mainBranchName}
+              mainBranch={mainBranch}
+              mainCommit={mainCommit}
+              onSelectCommit={handleSelectCommit}
+            />
 
-              <div className="flex w-full min-w-0" style={{ height: totalHeight }}>
-                <GitGraphTracks
-                  width={svgWidth}
-                  height={totalHeight}
-                  pathSegments={pathSegments}
-                  processedNodes={processedNodes}
-                  hoveredSha={hoveredSha}
-                  selectedSha={selectedNode?.sha}
-                />
-
-                <div className="flex-1 min-w-0 flex flex-col">
-                  {processedNodes.map((node) => {
-                    const isHovered = hoveredSha === node.sha;
-                    const isSelected = selectedNode?.sha === node.sha;
-
-                    return (
-                      <div
-                        key={node.sha}
-                        style={{ height: ROW_HEIGHT }}
-                        onPointerEnter={() => setHoveredSha(node.sha)}
-                        onPointerLeave={() => setHoveredSha(null)}
-                        onClick={() => setSelectedNode(isSelected ? null : node)}
-                        className={clsx(
-                          'group flex items-center gap-2.5 px-2.5 transition-colors duration-100 cursor-pointer border-b border-[var(--panel-border-subtle)]/40',
-                          isSelected
-                            ? 'bg-[var(--panel-subtle)]'
-                            : isHovered
-                              ? 'bg-[var(--panel-subtle)]/60'
-                              : 'hover:bg-[var(--panel-subtle)]/40'
-                        )}
-                      >
-                        {node.branchHeads.map((bName) => {
-                          const lane = branchLanes.get(bName) ?? 0;
-                          const color = LANE_COLORS[lane % LANE_COLORS.length];
-                          return (
-                            <span
-                              key={bName}
-                              className="inline-flex items-center gap-1 shrink-0 rounded-[3px] px-1.5 py-0.5 font-mono text-[9px] font-semibold border"
-                              style={{
-                                backgroundColor: `${color}18`,
-                                borderColor: `${color}40`,
-                                color: color,
-                              }}
-                            >
-                              <svg
-                                className="w-2.5 h-2.5 shrink-0 opacity-80"
-                                viewBox="0 0 16 16"
-                                fill="currentColor"
-                              >
-                                <path d="M5 3.254V3.25a.75.75 0 1 1 1.5 0v.004a2.25 2.25 0 0 1-.75 4.372v3.748a2.25 2.25 0 1 1-1.5 0V7.626A2.25 2.25 0 0 1 5 3.254Zm-1.25.746a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm0 8a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm7.25-5a2.25 2.25 0 1 0-1.5 0v1.25a.75.75 0 0 1-.75.75h-1.5v1.5h1.5a2.25 2.25 0 0 0 2.25-2.25V7Zm0-1.25a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-                              </svg>
-                              <span>{truncateText(bName, 18)}</span>
-                            </span>
-                          );
-                        })}
-
-                        <span
-                          className={clsx(
-                            'truncate font-sans text-xs font-medium flex-1 min-w-[280px]',
-                            isHovered || isSelected
-                              ? 'text-[var(--text-primary)]'
-                              : 'text-[var(--text-primary)]/90'
-                          )}
-                          title={node.message}
-                        >
-                          {node.message}
-                        </span>
-
-                        <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] truncate max-w-[85px]">
-                          @{node.author}
-                        </span>
-
-                        <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] tabular-nums">
-                          {formatRelativeTime(node.timestamp)}
-                        </span>
-
-                        <span className="shrink-0 font-mono text-[10px] text-[var(--text-secondary)] rounded bg-[var(--panel-subtle)] px-1.5 py-0.5 border border-[var(--panel-border-subtle)] group-hover:border-[var(--panel-border)]">
-                          {node.sha.slice(0, 7)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-2 border-b border-[var(--panel-border-subtle)] bg-[var(--panel-surface)] px-3 py-1.5 font-mono text-[10px]">
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                Lines:
+              </span>
+              {branchesWithColor.map((branch) => (
+                <span
+                  key={branch.name}
+                  className="inline-flex items-center gap-1.5 rounded-[3px] border px-1.5 py-0.5"
+                  style={{
+                    backgroundColor: `${branch.color}15`,
+                    borderColor: `${branch.color}35`,
+                    color: branch.color,
+                  }}
+                >
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: branch.color }}
+                  />
+                  <span className="font-semibold">{truncateText(branch.name, 18)}</span>
+                  {branch.isMain && (
+                    <span className="rounded-[2px] bg-[#2563eb]/20 px-1 py-0.2 text-[8px] font-bold uppercase">
+                      MAIN
+                    </span>
+                  )}
+                </span>
+              ))}
             </div>
 
-            {selectedNode && (
-              <CommitDetailPopover
-                selectedNode={selectedNode}
-                onClose={() => setSelectedNode(null)}
-              />
-            )}
+            <div className="relative">
+              <div className="custom-scrollbar h-[240px] w-full overflow-x-auto overflow-y-hidden bg-[var(--panel-surface)] select-none">
+                <div className="p-4 min-w-max min-h-full flex items-center [&_svg]:max-w-none [&_svg]:block [&_circle]:cursor-pointer [&_use]:cursor-pointer">
+                  <Gitgraph
+                    key={graphKey}
+                    options={{
+                      orientation: Orientation.Horizontal,
+                      template: metroTemplate,
+                      initCommitOffsetX: 24,
+                      initCommitOffsetY: 24,
+                      compareBranchesOrder: (a: string, b: string) => {
+                        if (a === mainBranchName) return -1;
+                        if (b === mainBranchName) return 1;
+                        return a.localeCompare(b);
+                      },
+                    }}
+                  >
+                    {renderGraph}
+                  </Gitgraph>
+                </div>
+              </div>
+
+              {selectedNode && (
+                <div className="absolute bottom-2 left-2 z-20 w-[calc(100%-16px)] max-w-[500px]">
+                  <CommitDetailPopover
+                    selectedNode={selectedNode}
+                    onClose={() => setSelectedNode(null)}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

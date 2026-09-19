@@ -18,13 +18,13 @@ export const LANE_WIDTH = 18;
 export const LANE_OFFSET = 18;
 
 export interface ProcessedNode extends CommitNode {
-  index: number;
-  lane: number;
-  x: number;
-  y: number;
-  color: string;
-  isMerge: boolean;
-  branchHeads: string[];
+  index?: number;
+  lane?: number;
+  x?: number;
+  y?: number;
+  color?: string;
+  isMerge?: boolean;
+  branchHeads?: string[];
 }
 
 export interface PathSegment {

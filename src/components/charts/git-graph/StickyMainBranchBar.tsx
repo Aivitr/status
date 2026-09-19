@@ -7,7 +7,7 @@ export interface StickyMainBranchBarProps {
   mainBranchName: string;
   mainBranch?: BranchItem;
   mainCommit?: CommitNode;
-  contentMinWidth: number;
+  contentMinWidth?: number;
   onSelectCommit?: (sha: string) => void;
 }
 
@@ -20,8 +20,8 @@ export function StickyMainBranchBar({
 }: StickyMainBranchBarProps) {
   return (
     <div
-      className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[var(--panel-border-subtle)] bg-[var(--panel-subtle)]/90 px-3 py-2 text-xs backdrop-blur-md transition-colors select-none"
-      style={{ minWidth: contentMinWidth }}
+      className="flex items-center justify-between gap-3 border-b border-[var(--panel-border-subtle)] bg-[var(--panel-subtle)]/75 px-3 py-2 text-xs backdrop-blur-md transition-colors select-none w-full"
+      style={contentMinWidth ? { minWidth: contentMinWidth } : undefined}
     >
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span className="flex items-center gap-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)] shrink-0">
