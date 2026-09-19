@@ -187,36 +187,6 @@ export function computeNetworkLayout({
     }
   }
 
-  // 3. Create Horizontal Tracks
-  const lanes: GraphBranchTrack[] = visibleBranchList.map((b, index) => {
-    const bNodes = branchCommitsMap.get(b.name) || [];
-    const lane = branchToLaneMap.get(b.name)!;
-    const hasCommits = bNodes.length > 0;
-
-    let startX = X_START - 20;
-    let endX = canvasWidth - 20;
-
-    if (b.isMain) {
-      startX = Math.max(0, X_START - 24);
-      endX = canvasWidth - 20;
-    } else if (hasCommits) {
-      startX = bNodes[0].x;
-      endX = bNodes[bNodes.length - 1].x;
-    }
-
-    return {
-      name: b.name,
-      color: lane.color,
-      isMain: b.isMain,
-      y: lane.y,
-      laneIndex: index,
-      startX,
-      endX,
-      hasCommits,
-      status: lane.status,
-    };
-  });
-
   // 4. Create Fork Curves
   const forkCurves = createForkCurves({
     visibleBranchList,
@@ -232,6 +202,46 @@ export function computeNetworkLayout({
     branchCommitsMap,
     branchItemMap,
     mainBranchName,
+    mainLaneY: mainLane.y,
+  });
+
+  const mergedBranchSet = new Set(mergeCurves.map((m) => m.branch));
+  const mergeCurveMap = new Map(mergeCurves.map((m) => [m.branch, m]));
+
+  // 3. Create Horizontal Tracks
+  const lanes: GraphBranchTrack[] = visibleBranchList.map((b, index) => {
+    const bNodes = branchCommitsMap.get(b.name) || [];
+    const lane = branchToLaneMap.get(b.name)!;
+    const hasCommits = bNodes.length > 0;
+
+    let startX = X_START - 20;
+    let endX = canvasWidth - 20;
+
+    if (b.isMain) {
+      startX = X_START - 20;
+      endX = canvasWidth - 20;
+    } else if (hasCommits) {
+      startX = bNodes[0].x;
+      const lastCommitX = bNodes[bNodes.length - 1].x;
+      if (mergedBranchSet.has(b.name)) {
+        const mc = mergeCurveMap.get(b.name)!;
+        endX = Math.max(lastCommitX, mc.fromX);
+      } else {
+        endX = lastCommitX;
+      }
+    }
+
+    return {
+      name: b.name,
+      color: lane.color,
+      isMain: b.isMain,
+      y: lane.y,
+      laneIndex: index,
+      startX,
+      endX,
+      hasCommits,
+      status: lane.status,
+    };
   });
 
   return {

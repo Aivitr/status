@@ -24,13 +24,18 @@ export function NetworkGraphCanvas({
   const { width, height, lanes, commitNodes, forkCurves, mergeCurves } = layout;
 
   return (
-    <div className="relative shrink-0" style={{ width, height }}>
+    <div
+      className="relative shrink-0"
+      style={{ width: `${width}px`, height: `${height}px`, minWidth: `${width}px` }}
+    >
       {/* SVG rendering subway network tracks, curves, and commit nodes */}
       <svg
         width={width}
         height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
         className="block select-none"
-        style={{ overflow: 'visible' }}
+        style={{ width: `${width}px`, height: `${height}px`, overflow: 'visible' }}
       >
         {/* Subtle lane horizontal divider lines */}
         {lanes.map((lane, index) => (
