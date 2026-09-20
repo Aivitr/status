@@ -115,6 +115,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[1],
           branch: 'main',
+          parents: [],
           message: 'init: baseline project setup',
           author: authors[0],
           timestamp: getIsoDate(20),
@@ -123,6 +124,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[2],
           branch: 'main',
+          parents: [shas[1]],
           message: 'chore(deps): bump dependencies',
           author: authors[2],
           timestamp: getIsoDate(16),
@@ -131,6 +133,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[3],
           branch: 'main',
+          parents: [shas[2]],
           message: 'feat(core): telemetry aggregator pipeline',
           author: authors[1],
           timestamp: getIsoDate(10),
@@ -139,6 +142,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[4],
           branch: 'feature/dark-mode',
+          parents: [shas[3]],
           message: 'feat(theme): dark mode color definitions',
           author: authors[0],
           timestamp: getIsoDate(8),
@@ -147,6 +151,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[6],
           branch: 'fix/auth-token',
+          parents: [shas[3]],
           message: 'refactor(auth): token expiration logic',
           author: authors[3],
           timestamp: getIsoDate(6),
@@ -155,6 +160,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[5],
           branch: 'feature/dark-mode',
+          parents: [shas[4]],
           message: 'fix(tokens): contrast adjustments in dark theme',
           author: authors[0],
           timestamp: getIsoDate(4.5),
@@ -163,6 +169,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[7],
           branch: 'fix/auth-token',
+          parents: [shas[6]],
           message: 'fix(auth): prevent race condition on refresh',
           author: authors[3],
           timestamp: getIsoDate(3.5),
@@ -171,6 +178,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[8],
           branch: 'main',
+          parents: [shas[3], shas[5]],
           message: 'Merge pull request #42 from feature/dark-mode',
           author: authors[1],
           timestamp: getIsoDate(3),
@@ -179,6 +187,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[9],
           branch: 'feature/new-dashboard',
+          parents: [shas[8]],
           message: 'feat(ui): dynamic grid widget framework',
           author: authors[1],
           timestamp: getIsoDate(2),
@@ -187,6 +196,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[0],
           branch: 'main',
+          parents: [shas[8]],
           message: 'release: v2.1.0-alpha candidate',
           author: authors[0],
           timestamp: getIsoDate(1),
@@ -195,6 +205,7 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
         {
           sha: shas[10],
           branch: 'feature/new-dashboard',
+          parents: [shas[9]],
           message: 'wip(kpi): add sparkline live feeds',
           author: authors[1],
           timestamp: getIsoDate(0.5),

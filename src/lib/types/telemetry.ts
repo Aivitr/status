@@ -52,6 +52,7 @@ export interface TelemetrySummaryDTO {
     nodes: Array<{
       sha: string;
       branch: string;
+      parents?: string[];
       message: string;
       author: string;
       timestamp: string;

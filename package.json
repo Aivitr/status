@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@octokit/graphql": "^9.0.5",
+    "@tomplum/react-git-log": "^3.5.1",
     "@upstash/redis": "^1.38.4",
     "@visx/axis": "^4.0.0",
     "@visx/curve": "^4.0.0",

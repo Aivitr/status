@@ -41,11 +41,14 @@ interface GraphqlResponse {
       nodes: Array<{
         name: string;
         target: {
-          history?: {
+            history?: {
             nodes: Array<{
               oid: string;
               message: string;
               committedDate: string;
+              parents?: {
+                nodes: Array<{ oid: string }>;
+              };
               author: {
                 user: {
                   login: string;
@@ -60,11 +63,14 @@ interface GraphqlResponse {
     defaultBranchRef: {
       name: string;
       target: {
-        history: {
+          history: {
           nodes: Array<{
             message: string;
             committedDate: string;
             oid: string;
+            parents?: {
+              nodes: Array<{ oid: string }>;
+            };
             author: {
               user: {
                 login: string;
@@ -312,6 +318,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   const commitMap = new Map<string, {
     sha: string;
     branch: string;
+    parents: string[];
     message: string;
     author: string;
     timestamp: string;
@@ -340,6 +347,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     commitMap.set(commit.oid, {
       sha: commit.oid,
       branch: commitBranch,
+      parents: commit.parents?.nodes?.map(p => p.oid) || [],
       message: firstLine,
       author: commit.author?.user?.login || commit.author?.name || 'unknown',
       timestamp: commit.committedDate,
@@ -354,6 +362,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
         commitMap.set(c.oid, {
           sha: c.oid,
           branch: branchName,
+          parents: c.parents?.nodes?.map(p => p.oid) || [],
           message: c.message.split('\n')[0],
           author: c.author?.user?.login || c.author?.name || 'unknown',
           timestamp: c.committedDate,
@@ -365,6 +374,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   const nodes: Array<{
     sha: string;
     branch: string;
+    parents?: string[];
     message: string;
     author: string;
     timestamp: string;
@@ -372,6 +382,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   }> = Array.from(commitMap.values()).map(c => ({
     sha: c.sha,
     branch: c.branch,
+    parents: c.parents,
     message: c.message,
     author: c.author,
     timestamp: c.timestamp,

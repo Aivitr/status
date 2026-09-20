@@ -40,6 +40,11 @@ export const GET_REPOSITORY_DATA = `
                   oid
                   message
                   committedDate
+                  parents(first: 5) {
+                    nodes {
+                      oid
+                    }
+                  }
                   author {
                     user {
                       login
@@ -61,6 +66,11 @@ export const GET_REPOSITORY_DATA = `
                 message
                 committedDate
                 oid
+                parents(first: 5) {
+                  nodes {
+                    oid
+                  }
+                }
                 author {
                   user {
                     login
