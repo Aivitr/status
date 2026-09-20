@@ -61,11 +61,13 @@ export const GET_REPOSITORY_DATA = `
         name
         target {
           ... on Commit {
-            history(first: 100) {
+              history(first: 100) {
               nodes {
                 message
                 committedDate
                 oid
+                additions
+                deletions
                 parents(first: 5) {
                   nodes {
                     oid

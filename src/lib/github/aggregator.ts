@@ -68,6 +68,8 @@ interface GraphqlResponse {
             message: string;
             committedDate: string;
             oid: string;
+            additions: number;
+            deletions: number;
             parents?: {
               nodes: Array<{ oid: string }>;
             };
@@ -612,6 +614,56 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     author: '',
   };
 
+  let currentCoveragePct = 0;
+  const coverageHistory: Array<{ commitSha: string; date: string; coverage: number }> = [];
+
+  if (workflowRuns && workflowRuns.length > 0) {
+    const chronologicalRuns = [...workflowRuns].reverse();
+    let totalRuns = 0;
+    let passedRuns = 0;
+    chronologicalRuns.forEach((run: any) => {
+      const status = mapWorkflowConclusion(run.conclusion, run.status);
+      if (status === 'PASSED' || status === 'FAILED') {
+        totalRuns++;
+        if (status === 'PASSED') passedRuns++;
+        const currentRate = (passedRuns / totalRuns) * 100;
+        coverageHistory.push({
+          commitSha: run.head_sha,
+          date: run.updated_at,
+          coverage: Math.round(currentRate * 10) / 10,
+        });
+      }
+    });
+    if (totalRuns > 0) {
+      currentCoveragePct = Math.round((passedRuns / totalRuns) * 100 * 10) / 10;
+    }
+  }
+
+  let currentBundleKb = 0;
+  const bundleHistory: Array<{ commitSha: string; date: string; bundleKb: number }> = [];
+
+  if (commits && commits.length > 0) {
+    const chronologicalCommits = [...commits].reverse();
+    let cumulativeNet = 0;
+    chronologicalCommits.forEach((c: any) => {
+      const net = (c.additions || 0) - (c.deletions || 0);
+      cumulativeNet += net;
+      bundleHistory.push({
+        commitSha: c.oid,
+        date: c.committedDate,
+        bundleKb: cumulativeNet,
+      });
+    });
+    currentBundleKb = cumulativeNet;
+  }
+
+  const qualityBenchmarks = (coverageHistory.length > 0 || bundleHistory.length > 0) ? {
+    currentCoveragePct,
+    coverageHistory,
+    currentBundleKb,
+    bundleHistory,
+  } : undefined;
+
   return {
     meta: {
       projectId: config.id,
@@ -647,6 +699,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
       nodes,
       branches,
     },
+    qualityBenchmarks,
     recentEvents,
   };
 }

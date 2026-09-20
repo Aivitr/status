@@ -26,7 +26,7 @@ async function fetchRest(config: ProjectConfig, path: string, params: Record<str
 export async function fetchWorkflowRuns(config: ProjectConfig, owner: string, repo: string, defaultBranch: string) {
   try {
     const data = await fetchRest(config, `/repos/${owner}/${repo}/actions/runs`, {
-      per_page: '5',
+      per_page: '30',
       branch: defaultBranch,
     });
     return data;

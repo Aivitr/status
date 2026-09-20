@@ -180,3 +180,8 @@ pre {
     animation: none;
   }
 }
+
+div[id^="vertical-line-"],
+div[data-testid^="vertical-line-"] {
+  left: calc(50% - 1px) !important;
+}

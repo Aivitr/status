@@ -24,9 +24,8 @@ interface ChartPoint {
   bundleKb?: number;
 }
 
-const MARGIN = { top: 20, right: 46, bottom: 24, left: 44 };
+const MARGIN = { top: 24, right: 64, bottom: 36, left: 48 };
 const COV_MIN = 80;
-const BUNDLE_CAP = 250;
 
 function QualityChartInner({ width, height, points }: { width: number; height: number; points: ChartPoint[] }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -39,12 +38,20 @@ function QualityChartInner({ width, height, points }: { width: number; height: n
     [points, innerW]
   );
 
+  const xTickValues = useMemo(() => {
+    if (points.length <= 6) return points.map(p => p.id);
+    const step = Math.ceil(points.length / 5);
+    return points.filter((_, i) => i % step === 0 || i === points.length - 1).map(p => p.id);
+  }, [points]);
+
   const coverages = useMemo(() => points.map((p) => p.coverage).filter((c): c is number => typeof c === 'number'), [points]);
   const bundles = useMemo(() => points.map((p) => p.bundleKb).filter((b): b is number => typeof b === 'number'), [points]);
 
   const minCov = coverages.length > 0 ? Math.min(...coverages, COV_MIN) : COV_MIN;
-  const maxBundle = bundles.length > 0 ? Math.max(...bundles, BUNDLE_CAP) : BUNDLE_CAP;
-  const minBundle = bundles.length > 0 ? Math.min(...bundles, 100) : 100;
+  const rawMinBundle = bundles.length > 0 ? Math.min(...bundles) : 0;
+  const rawMaxBundle = bundles.length > 0 ? Math.max(...bundles) : 1000;
+  const bundleDomainMin = rawMinBundle < 0 ? Math.floor(rawMinBundle * 1.15) : 0;
+  const bundleDomainMax = Math.max(bundleDomainMin + 100, Math.ceil(rawMaxBundle * 1.15));
 
   const yCoverage = useMemo(
     () => scaleLinear<number>({ domain: [Math.max(0, Math.floor((minCov - 10) / 10) * 10), 100], range: [innerH, 0], nice: true }),
@@ -52,8 +59,12 @@ function QualityChartInner({ width, height, points }: { width: number; height: n
   );
 
   const yBundle = useMemo(
-    () => scaleLinear<number>({ domain: [Math.max(0, Math.floor((minBundle * 0.7) / 25) * 25), Math.ceil((maxBundle * 1.1) / 25) * 25], range: [innerH, 0], nice: true }),
-    [minBundle, maxBundle, innerH]
+    () => scaleLinear<number>({
+      domain: [bundleDomainMin, bundleDomainMax],
+      range: [innerH, 0],
+      nice: true,
+    }),
+    [bundleDomainMin, bundleDomainMax, innerH]
   );
 
   const handlePointer = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -73,7 +84,12 @@ function QualityChartInner({ width, height, points }: { width: number; height: n
 
   return (
     <div className="relative h-full w-full select-none">
-      <svg width={width} height={height} className="overflow-visible" onPointerMove={handlePointer} onPointerLeave={() => setHoveredIdx(null)}>
+      <svg width={width} height={height} className="block" onPointerMove={handlePointer} onPointerLeave={() => setHoveredIdx(null)}>
+        <defs>
+          <clipPath id="chart-plot-area">
+            <rect x={0} y={0} width={innerW} height={innerH} />
+          </clipPath>
+        </defs>
         <Group left={MARGIN.left} top={MARGIN.top}>
           {yCoverage.ticks(4).map((t, i) => (
             <line key={`grid-${i}`} x1={0} x2={innerW} y1={yCoverage(t)} y2={yCoverage(t)} stroke="var(--panel-border-subtle)" strokeWidth={1} strokeDasharray="2 3" />
@@ -86,41 +102,36 @@ function QualityChartInner({ width, height, points }: { width: number; height: n
             </g>
           )}
 
-          {BUNDLE_CAP <= yBundle.domain()[1] && (
-            <g>
-              <line x1={0} x2={innerW} y1={yBundle(BUNDLE_CAP)} y2={yBundle(BUNDLE_CAP)} stroke="var(--status-danger)" strokeWidth={1.5} strokeDasharray="4 4" opacity={0.85} />
-              <text x={innerW - 4} y={yBundle(BUNDLE_CAP) - 4} textAnchor="end" fill="var(--status-danger)" fontSize={9} fontFamily="var(--font-mono)" fontWeight={600} className="font-mono tabular-nums">CAP {BUNDLE_CAP}KB</text>
-            </g>
-          )}
+          <g clipPath="url(#chart-plot-area)">
+            <LinePath<ChartPoint>
+              data={points}
+              defined={(d) => typeof d.coverage === 'number'}
+              x={(d) => xScale(d.id) ?? 0}
+              y={(d) => yCoverage(d.coverage ?? 0)}
+              stroke="var(--status-success)"
+              strokeWidth={2}
+              curve={curveMonotoneX}
+            />
+            <LinePath<ChartPoint>
+              data={points}
+              defined={(d) => typeof d.bundleKb === 'number'}
+              x={(d) => xScale(d.id) ?? 0}
+              y={(d) => yBundle(d.bundleKb ?? 0)}
+              stroke="var(--accent)"
+              strokeWidth={2}
+              curve={curveMonotoneX}
+            />
 
-          <LinePath<ChartPoint>
-            data={points}
-            defined={(d) => typeof d.coverage === 'number'}
-            x={(d) => xScale(d.id) ?? 0}
-            y={(d) => yCoverage(d.coverage ?? 0)}
-            stroke="var(--status-success)"
-            strokeWidth={2}
-            curve={curveMonotoneX}
-          />
-          <LinePath<ChartPoint>
-            data={points}
-            defined={(d) => typeof d.bundleKb === 'number'}
-            x={(d) => xScale(d.id) ?? 0}
-            y={(d) => yBundle(d.bundleKb ?? 0)}
-            stroke="var(--accent)"
-            strokeWidth={2}
-            curve={curveMonotoneX}
-          />
-
-          {points.map((p) => {
-            const cx = xScale(p.id) ?? 0;
-            return (
-              <g key={`dot-${p.id}`}>
-                {typeof p.coverage === 'number' && <circle cx={cx} cy={yCoverage(p.coverage)} r={3} fill="var(--panel-surface)" stroke="var(--status-success)" strokeWidth={2} />}
-                {typeof p.bundleKb === 'number' && <circle cx={cx} cy={yBundle(p.bundleKb)} r={3} fill="var(--panel-surface)" stroke="var(--accent)" strokeWidth={2} />}
-              </g>
-            );
-          })}
+            {points.map((p) => {
+              const cx = xScale(p.id) ?? 0;
+              return (
+                <g key={`dot-${p.id}`}>
+                  {typeof p.coverage === 'number' && <circle cx={cx} cy={yCoverage(p.coverage)} r={3} fill="var(--panel-surface)" stroke="var(--status-success)" strokeWidth={2} />}
+                  {typeof p.bundleKb === 'number' && <circle cx={cx} cy={yBundle(p.bundleKb)} r={3} fill="var(--panel-surface)" stroke="var(--accent)" strokeWidth={2} />}
+                </g>
+              );
+            })}
+          </g>
 
           {hovered && <line x1={hoveredX} x2={hoveredX} y1={0} y2={innerH} stroke="var(--text-muted)" strokeWidth={1} strokeDasharray="3 3" pointerEvents="none" />}
 
@@ -138,29 +149,42 @@ function QualityChartInner({ width, height, points }: { width: number; height: n
             numTicks={4}
             stroke="var(--panel-border)"
             tickStroke="var(--panel-border)"
-            tickFormat={(v) => `${v}k`}
+            tickFormat={(v) => {
+              const n = Number(v);
+              if (Math.abs(n) >= 1000) return `${(n / 1000).toFixed(0)}k`;
+              return `${n}`;
+            }}
             tickLabelProps={() => ({ fill: 'var(--text-secondary)', fontSize: 9, fontFamily: 'var(--font-mono)', textAnchor: 'start', dy: '0.33em', dx: '0.25em' })}
           />
           <AxisBottom
             top={innerH}
             scale={xScale}
+            tickValues={xTickValues}
             stroke="var(--panel-border)"
             tickStroke="var(--panel-border)"
             tickFormat={(id) => points.find((p) => p.id === id)?.shortSha ?? ''}
-            tickLabelProps={() => ({ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)', textAnchor: 'middle', dy: '0.5em' })}
+            tickLabelProps={() => ({ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)', textAnchor: 'middle', dy: '0.6em' })}
           />
         </Group>
       </svg>
 
       {hovered && (
         <div
-          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-[4px] border border-[var(--panel-border)] bg-[var(--panel-surface)] px-2 py-1 font-mono text-[10px] shadow-sm"
-          style={{ left: MARGIN.left + hoveredX, top: Math.max(MARGIN.top - 6, 8) }}
+          className="pointer-events-none absolute z-20 rounded-[4px] border border-[var(--panel-border)] bg-[var(--panel-surface)]/95 px-2.5 py-1.5 font-mono text-[10px] shadow-md backdrop-blur-sm transition-all"
+          style={{
+            left: Math.max(80, Math.min(width - 80, MARGIN.left + hoveredX)),
+            top: MARGIN.top + 12,
+            transform: 'translateX(-50%)',
+          }}
         >
-          <div className="font-semibold text-[var(--text-primary)]">Commit {hovered.shortSha}</div>
+          <div className="font-semibold text-[var(--text-primary)]">Commit #{hovered.shortSha}</div>
           <div className="mt-0.5 flex items-center gap-2.5 tabular-nums text-[var(--text-secondary)]">
-            {typeof hovered.coverage === 'number' && <span className="text-[var(--status-success)]">Cov: {hovered.coverage.toFixed(1)}%</span>}
-            {typeof hovered.bundleKb === 'number' && <span className="text-[var(--accent)]">Bundle: {hovered.bundleKb.toFixed(0)} KB</span>}
+            {typeof hovered.coverage === 'number' && (
+              <span className="text-[var(--status-success)]">CI Pass: {hovered.coverage.toFixed(1)}%</span>
+            )}
+            {typeof hovered.bundleKb === 'number' && (
+              <span className="text-[var(--accent)]">Churn: {hovered.bundleKb >= 0 ? `+${hovered.bundleKb}` : hovered.bundleKb}</span>
+            )}
           </div>
         </div>
       )}
@@ -197,17 +221,17 @@ export function QualityBenchmarksChart({ qualityBenchmarks, isLoading = false, c
           <div className="flex items-center gap-2.5 font-mono text-[10px] tabular-nums text-[var(--text-secondary)]">
             <div className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--status-success)]" />
-              <span>Cov: {currentCoverage !== undefined ? `${currentCoverage.toFixed(1)}%` : '--'}</span>
+              <span>CI Pass: {currentCoverage !== undefined ? `${currentCoverage.toFixed(1)}%` : '--'}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-              <span>Bundle: {currentBundle !== undefined ? `${currentBundle.toFixed(0)}k` : '--'}</span>
+              <span>Churn: {currentBundle !== undefined ? currentBundle.toFixed(0) : '--'}</span>
             </div>
           </div>
         )}
       </div>
 
-      <div className="mt-3 h-52 w-full">
+      <div className="mt-3 h-[280px] w-full">
         {isLoading && !hasData ? (
           <div className="flex h-full flex-col justify-between p-2">
             <div className="flex justify-between">
