@@ -3,6 +3,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { GitLog, type GitLogEntry, type Commit } from '@tomplum/react-git-log';
+import '@tomplum/react-git-log/dist/index.css';
 
 import type { TelemetrySummaryDTO, NodeCIStatus } from '@/lib/types/telemetry';
 import { useTheme } from '@/context/ThemeContext';
@@ -260,7 +261,7 @@ export function GitBranchGraph({
   return (
     <div
       className={clsx(
-        'relative flex h-[340px] w-full flex-col overflow-hidden rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] shadow-none',
+        'relative flex h-[380px] min-h-[360px] w-full flex-col overflow-hidden rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] shadow-none',
         className
       )}
     >
@@ -416,7 +417,7 @@ export function GitBranchGraph({
             </span>
           </div>
         ) : (
-          <div className="min-w-max p-2">
+          <div className="w-full min-w-max p-2.5">
             <GitLog<CustomCommitMeta>
               entries={filteredEntries}
               currentBranch={mainBranchName}
@@ -438,8 +439,18 @@ export function GitBranchGraph({
               <GitLog.Table
                 styles={{
                   table: {
-                    fontFamily: 'inherit',
+                    fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, monospace)',
                     fontSize: '11px',
+                  },
+                  tr: {
+                    height: '24px',
+                    borderBottom: '1px solid var(--panel-border-subtle, rgba(255, 255, 255, 0.05))',
+                  },
+                  td: {
+                    padding: '2px 8px',
+                    fontFamily: 'var(--font-mono, ui-monospace, SFMono-Regular, monospace)',
+                    fontSize: '11px',
+                    color: 'var(--text-secondary)',
                   },
                 }}
               />

@@ -1,0 +1,21 @@
+diff --git a/package.json b/package.json
+index 3cefbff953652ecd97f66670b0ac7699c209fe3a..8a0a70feef8410265fbabe630aa18b158911dc75 100644
+--- a/package.json
++++ b/package.json
+@@ -13,8 +13,14 @@
+   "module": "dist/react-git-log.js",
+   "types": "dist/index.d.ts",
+   "exports": {
+-    "types": "./dist/index.d.ts",
+-    "import": "./dist/react-git-log.js"
++    ".": {
++      "types": "./dist/index.d.ts",
++      "import": "./dist/react-git-log.js",
++      "default": "./dist/react-git-log.js"
++    },
++    "./dist/index.css": "./dist/index.css",
++    "./index.css": "./dist/index.css",
++    "./*": "./*"
+   },
+   "files": [
+     "dist/",

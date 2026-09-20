@@ -162,6 +162,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@tomplum/react-git-log': 90d7f40f0e48af3e7ce25815bbc8d5951604dff495155b1942307bb4ae23c73c
+
 importers:
 
   .:
@@ -171,7 +174,7 @@ importers:
         version: 9.0.5
       '@tomplum/react-git-log':
         specifier: ^3.5.1
-        version: 3.5.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 3.5.1(patch_hash=90d7f40f0e48af3e7ce25815bbc8d5951604dff495155b1942307bb4ae23c73c)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@upstash/redis':
         specifier: ^1.38.4
         version: 1.38.4
@@ -2981,7 +2984,7 @@ snapshots:
       postcss: 8.5.28
       tailwindcss: 4.3.3
 
-  '@tomplum/react-git-log@3.5.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@tomplum/react-git-log@3.5.1(patch_hash=90d7f40f0e48af3e7ce25815bbc8d5951604dff495155b1942307bb4ae23c73c)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@uidotdev/usehooks': 2.4.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       classnames: 2.5.1
