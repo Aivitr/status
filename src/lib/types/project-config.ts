@@ -3,6 +3,7 @@ export interface ProjectConfig {
   name: string;
   icon: string;
   description: string;
+  language?: string;
   repository: {
     owner: string;
     repo: string;
