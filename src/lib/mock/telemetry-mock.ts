@@ -6,11 +6,11 @@ import { TelemetrySummaryDTO } from '@/lib/types/telemetry';
 function createSeededRandom(seed: string) {
   let h = 0;
   for (let i = 0; i < seed.length; i++) {
-    h = Math.imul(31, h) + seed.charCodeAt(i) | 0;
+    h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
   }
   let state = h;
-  return function() {
-    state = Math.imul(1597334677, state) + 3812015801 | 0;
+  return function () {
+    state = (Math.imul(1597334677, state) + 3812015801) | 0;
     const t = state * 2.3283064365386963e-10;
     return t - Math.floor(t);
   };
@@ -18,11 +18,11 @@ function createSeededRandom(seed: string) {
 
 export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
   const random = createSeededRandom(projectId + '_telemetry');
-  
+
   // Random range helpers
   const randomInt = (min: number, max: number) => Math.floor(random() * (max - min + 1)) + min;
   const randomChoice = <T>(arr: T[]): T => arr[Math.floor(random() * arr.length)];
-  
+
   const now = new Date();
   const getIsoDate = (hoursAgo: number) => {
     const d = new Date(now.getTime() - hoursAgo * 3600000);
@@ -40,9 +40,17 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
   const baseDeletions = randomInt(2000, 8000);
 
   const shas = [
-    'a1b2c3d', 'b2c3d4e', 'c3d4e5f', 'd4e5f6g',
-    'e5f6g7h', 'f6g7h8i', '0a1b2c3', '1b2c3d4',
-    '2c3d4e5', '3d4e5f6', '4e5f6g7'
+    'a1b2c3d',
+    'b2c3d4e',
+    'c3d4e5f',
+    'd4e5f6g',
+    'e5f6g7h',
+    'f6g7h8i',
+    '0a1b2c3',
+    '1b2c3d4',
+    '2c3d4e5',
+    '3d4e5f6',
+    '4e5f6g7',
   ];
 
   const branches = [
@@ -56,13 +64,13 @@ export function generateMockTelemetry(projectId: string): TelemetrySummaryDTO {
   const coverageHistory = Array.from({ length: 7 }, (_, i) => ({
     commitSha: shas[i % shas.length],
     date: getIsoDate(i * 24), // one per day
-    coverage: 80 + (random() * 10), // 80 - 90
+    coverage: 80 + random() * 10, // 80 - 90
   })).reverse();
 
   const bundleHistory = Array.from({ length: 7 }, (_, i) => ({
     commitSha: shas[i % shas.length],
     date: getIsoDate(i * 24),
-    bundleKb: 150 + (random() * 100), // 150 - 250
+    bundleKb: 150 + random() * 100, // 150 - 250
   })).reverse();
 
   return {

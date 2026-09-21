@@ -22,8 +22,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         if (stored === 'clean-light' || stored === 'industrial-dark') {
           return stored;
         }
-      } catch {
-      }
+      } catch {}
     }
     return 'clean-light';
   });
@@ -36,8 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setThemeState(newTheme);
     try {
       localStorage.setItem(STORAGE_KEY, newTheme);
-    } catch {
-    }
+    } catch {}
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 

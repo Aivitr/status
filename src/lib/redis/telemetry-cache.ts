@@ -16,7 +16,10 @@ export async function getTelemetrySummary(projectId: string): Promise<TelemetryS
   }
 }
 
-export async function setTelemetrySummary(projectId: string, data: TelemetrySummaryDTO): Promise<void> {
+export async function setTelemetrySummary(
+  projectId: string,
+  data: TelemetrySummaryDTO,
+): Promise<void> {
   if (!redis) return;
   try {
     await redis.set(`telemetry:${projectId}:summary`, data, { ex: TTL_1_HOUR });
@@ -38,7 +41,10 @@ export async function pushEvent(projectId: string, event: TelemetryEvent): Promi
   }
 }
 
-export async function getRecentEvents(projectId: string, limit: number = EVENTS_LIMIT): Promise<TelemetryEvent[]> {
+export async function getRecentEvents(
+  projectId: string,
+  limit: number = EVENTS_LIMIT,
+): Promise<TelemetryEvent[]> {
   if (!redis) return [];
   try {
     return await redis.lrange<TelemetryEvent>(`telemetry:${projectId}:events`, 0, limit - 1);

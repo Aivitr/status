@@ -1,38 +1,38 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --canvas-bg: oklch(0.985 0.004 240);
-  --panel-surface: oklch(1.0 0 0);
+  --panel-surface: oklch(1 0 0);
   --panel-subtle: oklch(0.965 0.005 240);
   --panel-border: oklch(0.88 0.01 240);
   --panel-border-subtle: oklch(0.92 0.005 240);
-  --text-primary: oklch(0.20 0.02 240);
+  --text-primary: oklch(0.2 0.02 240);
   --text-secondary: oklch(0.45 0.02 240);
   --text-muted: oklch(0.55 0.015 240);
   --status-success: oklch(0.62 0.17 145);
   --status-running: oklch(0.65 0.15 225);
   --status-warning: oklch(0.72 0.16 75);
   --status-danger: oklch(0.58 0.22 25);
-  --accent: oklch(0.52 0.20 255);
+  --accent: oklch(0.52 0.2 255);
 }
 
-[data-theme="clean-light"] {
+[data-theme='clean-light'] {
   --canvas-bg: oklch(0.985 0.004 240);
-  --panel-surface: oklch(1.0 0 0);
+  --panel-surface: oklch(1 0 0);
   --panel-subtle: oklch(0.965 0.005 240);
   --panel-border: oklch(0.88 0.01 240);
   --panel-border-subtle: oklch(0.92 0.005 240);
-  --text-primary: oklch(0.20 0.02 240);
+  --text-primary: oklch(0.2 0.02 240);
   --text-secondary: oklch(0.45 0.02 240);
   --text-muted: oklch(0.55 0.015 240);
   --status-success: oklch(0.62 0.17 145);
   --status-running: oklch(0.65 0.15 225);
   --status-warning: oklch(0.72 0.16 75);
   --status-danger: oklch(0.58 0.22 25);
-  --accent: oklch(0.52 0.20 255);
+  --accent: oklch(0.52 0.2 255);
 }
 
-[data-theme="industrial-dark"] {
+[data-theme='industrial-dark'] {
   --canvas-bg: oklch(0.14 0.02 240);
   --panel-surface: oklch(0.18 0.02 240);
   --panel-subtle: oklch(0.22 0.02 240);
@@ -41,7 +41,7 @@
   --text-primary: oklch(0.95 0.01 240);
   --text-secondary: oklch(0.75 0.02 240);
   --text-muted: oklch(0.55 0.02 240);
-  --status-success: oklch(0.65 0.20 145);
+  --status-success: oklch(0.65 0.2 145);
   --status-running: oklch(0.68 0.18 225);
   --status-warning: oklch(0.75 0.18 75);
   --status-danger: oklch(0.65 0.24 25);
@@ -63,8 +63,11 @@
   --color-status-danger: var(--status-danger);
   --color-accent: var(--accent);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {
@@ -83,7 +86,8 @@ pre {
 }
 
 @keyframes beacon-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -181,7 +185,7 @@ pre {
   }
 }
 
-div[id^="vertical-line-"],
-div[data-testid^="vertical-line-"] {
+div[id^='vertical-line-'],
+div[data-testid^='vertical-line-'] {
   left: calc(50% - 1px) !important;
 }

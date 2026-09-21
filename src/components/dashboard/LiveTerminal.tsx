@@ -37,17 +37,20 @@ function getEventBadge(type: EventType) {
     case 'PR_MERGED':
       return {
         label: 'PR_MERGED',
-        className: 'bg-[var(--status-success)]/20 text-[var(--status-success)] border-[var(--status-success)]/40',
+        className:
+          'bg-[var(--status-success)]/20 text-[var(--status-success)] border-[var(--status-success)]/40',
       };
     case 'CI_PASSED':
       return {
         label: 'CI_PASSED',
-        className: 'bg-[var(--status-running)]/20 text-[var(--status-running)] border-[var(--status-running)]/40',
+        className:
+          'bg-[var(--status-running)]/20 text-[var(--status-running)] border-[var(--status-running)]/40',
       };
     case 'CI_FAILED':
       return {
         label: 'CI_FAILED',
-        className: 'bg-[var(--status-danger)]/20 text-[var(--status-danger)] border-[var(--status-danger)]/40',
+        className:
+          'bg-[var(--status-danger)]/20 text-[var(--status-danger)] border-[var(--status-danger)]/40',
       };
     case 'RELEASE_PUBLISHED':
       return {
@@ -146,7 +149,7 @@ export function LiveTerminal({ events = [], className }: LiveTerminalProps) {
                     <span
                       className={clsx(
                         'shrink-0 rounded-[3px] border px-1.5 py-0.2 text-[9px] font-semibold tracking-wider uppercase',
-                        badge.className
+                        badge.className,
                       )}
                     >
                       {badge.label}

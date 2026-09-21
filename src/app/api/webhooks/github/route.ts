@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     let payload: any;
     try {
       payload = JSON.parse(rawBody);
-    } catch (err) {
+    } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
@@ -28,7 +28,8 @@ export async function POST(request: Request) {
 
     const projects = getAllProjects();
     const project = projects.find(
-      (p) => `${p.repository.owner}/${p.repository.repo}`.toLowerCase() === repoFullName.toLowerCase()
+      (p) =>
+        `${p.repository.owner}/${p.repository.repo}`.toLowerCase() === repoFullName.toLowerCase(),
     );
 
     if (!project) {

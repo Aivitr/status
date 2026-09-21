@@ -10,7 +10,7 @@ export function getAllProjects(): ProjectConfig[] {
 }
 
 export function getProjectConfig(id: string): ProjectConfig | undefined {
-  return validatedConfig.find(project => project.id === id);
+  return validatedConfig.find((project) => project.id === id);
 }
 
 export * from '@/lib/types/project-config';

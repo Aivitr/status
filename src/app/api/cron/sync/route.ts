@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   for (const project of projects) {
     try {
       const lockAcquired = await acquireRefreshLock(project.id);
-      
+
       if (lockAcquired) {
         if (process.env.GITHUB_TOKEN) {
           const data = await fetchAndAggregate(project);

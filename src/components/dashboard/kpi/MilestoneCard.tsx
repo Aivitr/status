@@ -38,7 +38,7 @@ export function MilestoneCard({ milestone, className }: MilestoneCardProps) {
     <div
       className={clsx(
         'flex flex-col justify-between rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 shadow-none',
-        className
+        className,
       )}
     >
       {/* Card Header: Category & Countdown */}
@@ -77,7 +77,7 @@ export function MilestoneCard({ milestone, className }: MilestoneCardProps) {
                 key={idx}
                 className={clsx(
                   'h-1.5 flex-1 rounded-[1px] transition-colors duration-200',
-                  isFilled ? 'bg-[var(--accent)]' : 'bg-[var(--panel-border-subtle)]'
+                  isFilled ? 'bg-[var(--accent)]' : 'bg-[var(--panel-border-subtle)]',
                 )}
               />
             );

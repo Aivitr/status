@@ -5,25 +5,32 @@ async function fetchRest(config: ProjectConfig, path: string, params: Record<str
   const token = getGithubToken(config);
   const url = new URL(`https://api.github.com${path}`);
   Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
-  
+
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
   };
-  
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  
+
   const response = await fetch(url.toString(), { headers });
-  
+
   if (!response.ok) {
-    throw new Error(`GitHub REST API error: ${response.status} ${response.statusText} for ${url.toString()}`);
+    throw new Error(
+      `GitHub REST API error: ${response.status} ${response.statusText} for ${url.toString()}`,
+    );
   }
-  
+
   return response.json();
 }
 
-export async function fetchWorkflowRuns(config: ProjectConfig, owner: string, repo: string, defaultBranch: string) {
+export async function fetchWorkflowRuns(
+  config: ProjectConfig,
+  owner: string,
+  repo: string,
+  defaultBranch: string,
+) {
   try {
     const data = await fetchRest(config, `/repos/${owner}/${repo}/actions/runs`, {
       per_page: '30',
@@ -48,7 +55,13 @@ export async function fetchBranches(config: ProjectConfig, owner: string, repo: 
   }
 }
 
-export async function compareCommits(config: ProjectConfig, owner: string, repo: string, base: string, head: string) {
+export async function compareCommits(
+  config: ProjectConfig,
+  owner: string,
+  repo: string,
+  base: string,
+  head: string,
+) {
   try {
     const data = await fetchRest(config, `/repos/${owner}/${repo}/compare/${base}...${head}`);
     return data;

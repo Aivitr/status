@@ -13,7 +13,7 @@ export function useTelemetry(projectId: string) {
       refreshInterval: 30000,
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-    }
+    },
   );
 
   return {

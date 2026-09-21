@@ -41,7 +41,7 @@ export function TimeToShipCard({ timeToShip, className }: TimeToShipCardProps) {
     <div
       className={clsx(
         'flex flex-col justify-between rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 shadow-none',
-        className
+        className,
       )}
     >
       {/* Card Header */}

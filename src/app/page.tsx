@@ -34,10 +34,7 @@ export default function Home() {
             qualityBenchmarks={telemetry?.qualityBenchmarks}
             isLoading={isLoading}
           />
-          <GitBranchGraph
-            gitBranchGraph={telemetry?.gitBranchGraph}
-            isLoading={isLoading}
-          />
+          <GitBranchGraph gitBranchGraph={telemetry?.gitBranchGraph} isLoading={isLoading} />
         </div>
       </section>
       <LiveTerminal events={telemetry?.recentEvents} />

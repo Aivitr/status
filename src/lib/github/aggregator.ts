@@ -2,12 +2,12 @@ import { getGraphqlClient } from './client';
 import { GET_REPOSITORY_DATA } from './queries';
 import { fetchWorkflowRuns, fetchBranches, compareCommits } from './rest';
 import type { ProjectConfig } from '@/lib/types/project-config';
-import type { 
-  TelemetrySummaryDTO, 
-  CIStatus, 
-  BranchStatus, 
-  NodeCIStatus, 
-  EventType 
+import type {
+  TelemetrySummaryDTO,
+  CIStatus,
+  BranchStatus,
+  NodeCIStatus,
+  EventType,
 } from '@/lib/types/telemetry';
 
 interface GraphqlResponse {
@@ -41,7 +41,7 @@ interface GraphqlResponse {
       nodes: Array<{
         name: string;
         target: {
-            history?: {
+          history?: {
             nodes: Array<{
               oid: string;
               message: string;
@@ -63,7 +63,7 @@ interface GraphqlResponse {
     defaultBranchRef: {
       name: string;
       target: {
-          history: {
+        history: {
           nodes: Array<{
             message: string;
             committedDate: string;
@@ -120,7 +120,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   }
 
   const repository = gqlData?.repository;
-  
+
   // REST fetches
   const [workflowRunsData, branchesData] = await Promise.all([
     fetchWorkflowRuns(config, owner, repo, defaultBranch),
@@ -137,13 +137,13 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   let openPrs = 0;
   let mergedPrs = 0;
   let closedPrs = 0;
-  
+
   const mergedDurations: number[] = [];
 
-  prs.forEach(pr => {
+  prs.forEach((pr) => {
     additions += pr.additions;
     deletions += pr.deletions;
-    
+
     if (pr.state === 'OPEN') openPrs++;
     if (pr.state === 'MERGED') {
       mergedPrs++;
@@ -168,10 +168,10 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
 
   // Process Commits
   const commits = repository?.defaultBranchRef?.target.history.nodes || [];
-  const sparkline = new Array(24).fill(0);
+  const sparkline = Array.from({ length: 24 }, () => 0);
   const now = Date.now();
 
-  commits.forEach(commit => {
+  commits.forEach((commit) => {
     const d = new Date(commit.committedDate).getTime();
     const diffHours = Math.floor((now - d) / (1000 * 60 * 60));
     if (diffHours >= 0 && diffHours < 24) {
@@ -189,7 +189,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     timestamp: string;
   }> = [];
 
-  prs.forEach(pr => {
+  prs.forEach((pr) => {
     if (pr.state === 'MERGED' && pr.mergedAt) {
       events.push({
         id: `pr-${pr.url}`,
@@ -202,19 +202,29 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     }
   });
 
-  workflowRuns.forEach((run: { id: number, conclusion: string, status: string, html_url: string, name: string, updated_at: string, actor?: { login: string } }) => {
-    const status = mapWorkflowConclusion(run.conclusion, run.status);
-    if (status === 'PASSED' || status === 'FAILED') {
-      events.push({
-        id: `run-${run.id}`,
-        type: status === 'PASSED' ? 'CI_PASSED' : 'CI_FAILED',
-        title: run.name,
-        actor: run.actor?.login || 'unknown',
-        url: run.html_url,
-        timestamp: run.updated_at,
-      });
-    }
-  });
+  workflowRuns.forEach(
+    (run: {
+      id: number;
+      conclusion: string;
+      status: string;
+      html_url: string;
+      name: string;
+      updated_at: string;
+      actor?: { login: string };
+    }) => {
+      const status = mapWorkflowConclusion(run.conclusion, run.status);
+      if (status === 'PASSED' || status === 'FAILED') {
+        events.push({
+          id: `run-${run.id}`,
+          type: status === 'PASSED' ? 'CI_PASSED' : 'CI_FAILED',
+          title: run.name,
+          actor: run.actor?.login || 'unknown',
+          url: run.html_url,
+          timestamp: run.updated_at,
+        });
+      }
+    },
+  );
 
   events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   const recentEvents = events.slice(0, 20);
@@ -270,7 +280,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   for (const b of rawBranches) {
     const bName = b.name;
     const isMain = bName === actualDefaultBranch;
-    
+
     let status: BranchStatus = 'SYNCED';
     if (!isMain) {
       const compareData = await compareCommits(config, owner, repo, actualDefaultBranch, bName);
@@ -280,26 +290,42 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
         }
         const baseCommitRaw = compareData.merge_base_commit || compareData.base_commit;
         const baseSha = baseCommitRaw?.sha;
-        const baseCommit = baseCommitRaw && baseSha ? {
-          sha: baseSha,
-          message: baseCommitRaw.commit?.message?.split('\n')[0] || 'Base commit',
-          author: baseCommitRaw.author?.login || baseCommitRaw.commit?.author?.name || 'unknown',
-          timestamp: baseCommitRaw.commit?.committer?.date || baseCommitRaw.commit?.author?.date || new Date().toISOString(),
-          parents: baseCommitRaw.parents?.map((p: { sha: string }) => p.sha) || [],
-        } : undefined;
+        const baseCommit =
+          baseCommitRaw && baseSha
+            ? {
+                sha: baseSha,
+                message: baseCommitRaw.commit?.message?.split('\n')[0] || 'Base commit',
+                author:
+                  baseCommitRaw.author?.login || baseCommitRaw.commit?.author?.name || 'unknown',
+                timestamp:
+                  baseCommitRaw.commit?.committer?.date ||
+                  baseCommitRaw.commit?.author?.date ||
+                  new Date().toISOString(),
+                parents: baseCommitRaw.parents?.map((p: { sha: string }) => p.sha) || [],
+              }
+            : undefined;
 
-        const compareCommitsList = Array.isArray(compareData.commits) ? compareData.commits.map((c: {
-          sha: string;
-          commit?: { message?: string; author?: { name?: string; date?: string }; committer?: { date?: string } };
-          author?: { login?: string };
-          parents?: Array<{ sha: string }>;
-        }) => ({
-          sha: c.sha,
-          message: c.commit?.message?.split('\n')[0] || `Commit on ${bName}`,
-          author: c.author?.login || c.commit?.author?.name || 'unknown',
-          timestamp: c.commit?.committer?.date || c.commit?.author?.date || new Date().toISOString(),
-          parents: c.parents?.map(p => p.sha) || [],
-        })) : [];
+        const compareCommitsList = Array.isArray(compareData.commits)
+          ? compareData.commits.map(
+              (c: {
+                sha: string;
+                commit?: {
+                  message?: string;
+                  author?: { name?: string; date?: string };
+                  committer?: { date?: string };
+                };
+                author?: { login?: string };
+                parents?: Array<{ sha: string }>;
+              }) => ({
+                sha: c.sha,
+                message: c.commit?.message?.split('\n')[0] || `Commit on ${bName}`,
+                author: c.author?.login || c.commit?.author?.name || 'unknown',
+                timestamp:
+                  c.commit?.committer?.date || c.commit?.author?.date || new Date().toISOString(),
+                parents: c.parents?.map((p) => p.sha) || [],
+              }),
+            )
+          : [];
 
         branchCompareMap.set(bName, {
           status,
@@ -318,12 +344,13 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     });
   }
 
-  const mergeBranchRegex = /Merge pull request #\d+ from (?:[\w-]+\/)?([^\s\n]+)|Merge branch '([^']+)'/i;
-  commits.forEach(c => {
+  const mergeBranchRegex =
+    /Merge pull request #\d+ from (?:[\w-]+\/)?([^\s\n]+)|Merge branch '([^']+)'/i;
+  commits.forEach((c) => {
     const match = c.message.match(mergeBranchRegex);
     if (match) {
       const bName = (match[1] || match[2] || '').trim();
-      if (bName && bName !== actualDefaultBranch && !branches.some(b => b.name === bName)) {
+      if (bName && bName !== actualDefaultBranch && !branches.some((b) => b.name === bName)) {
         branches.push({
           name: bName,
           isMain: false,
@@ -338,7 +365,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   for (const ref of refNodes) {
     const refName = ref.name;
     const refTipSha = ref.target?.history?.nodes?.[0]?.oid || '';
-    const existing = branches.find(b => b.name === refName);
+    const existing = branches.find((b) => b.name === refName);
     if (!existing) {
       branches.push({
         name: refName,
@@ -362,7 +389,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
 
   // Node CI Status tracking
   const shaToStatus = new Map<string, NodeCIStatus>();
-  workflowRuns.forEach((run: { head_sha: string, conclusion: string, status: string }) => {
+  workflowRuns.forEach((run: { head_sha: string; conclusion: string; status: string }) => {
     if (!shaToStatus.has(run.head_sha)) {
       const ci = mapWorkflowConclusion(run.conclusion, run.status);
       shaToStatus.set(run.head_sha, mapToNodeCIStatus(ci));
@@ -370,8 +397,8 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
   });
 
   const defaultParentsMap = new Map<string, string[]>();
-  commits.forEach(c => {
-    defaultParentsMap.set(c.oid, c.parents?.nodes?.map(p => p.oid) || []);
+  commits.forEach((c) => {
+    defaultParentsMap.set(c.oid, c.parents?.nodes?.map((p) => p.oid) || []);
   });
 
   function getAncestorsInDefault(startSha: string): Set<string> {
@@ -399,8 +426,9 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
       const featureParent = parents[1];
       const firstLine = c.message.split('\n')[0];
       const match = firstLine.match(mergeBranchRegex);
-      const branchName = (match ? (match[1] || match[2] || '').trim() : '') ||
-        branches.find(b => b.latestSha === featureParent && !b.isMain)?.name;
+      const branchName =
+        (match ? (match[1] || match[2] || '').trim() : '') ||
+        branches.find((b) => b.latestSha === featureParent && !b.isMain)?.name;
 
       if (branchName) {
         const mainAncestors = getAncestorsInDefault(mainParent);
@@ -422,7 +450,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
           }
         }
 
-        const br = branches.find(b => b.name === branchName);
+        const br = branches.find((b) => b.name === branchName);
         if (br && !br.latestSha) {
           br.latestSha = featureParent;
         }
@@ -430,23 +458,26 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     }
   }
 
-  const commitMap = new Map<string, {
-    sha: string;
-    branch: string;
-    parents: string[];
-    message: string;
-    author: string;
-    timestamp: string;
-  }>();
+  const commitMap = new Map<
+    string,
+    {
+      sha: string;
+      branch: string;
+      parents: string[];
+      message: string;
+      author: string;
+      timestamp: string;
+    }
+  >();
 
-  commits.forEach(commit => {
+  commits.forEach((commit) => {
     const firstLine = commit.message.split('\n')[0];
     const commitBranch = commitBranchMap.get(commit.oid) || actualDefaultBranch;
 
     commitMap.set(commit.oid, {
       sha: commit.oid,
       branch: commitBranch,
-      parents: commit.parents?.nodes?.map(p => p.oid) || [],
+      parents: commit.parents?.nodes?.map((p) => p.oid) || [],
       message: firstLine,
       author: commit.author?.user?.login || commit.author?.name || 'unknown',
       timestamp: commit.committedDate,
@@ -462,7 +493,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
         commitMap.set(c.oid, {
           sha: c.oid,
           branch: branchName,
-          parents: c.parents?.nodes?.map(p => p.oid) || [],
+          parents: c.parents?.nodes?.map((p) => p.oid) || [],
           message: c.message.split('\n')[0],
           author: c.author?.user?.login || c.author?.name || 'unknown',
           timestamp: c.committedDate,
@@ -517,14 +548,14 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     if (b.isMain) continue;
 
     const bCommits = Array.from(commitMap.values())
-      .filter(c => c.branch === b.name)
+      .filter((c) => c.branch === b.name)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     let baseSha = branchCompareMap.get(b.name)?.baseSha;
     if (!baseSha || !commitMap.has(baseSha)) {
-      const mergeCommit = commits.find(c => {
+      const mergeCommit = commits.find((c) => {
         const match = c.message.match(mergeBranchRegex);
-        const mBranch = (match ? (match[1] || match[2] || '').trim() : '');
+        const mBranch = match ? (match[1] || match[2] || '').trim() : '';
         return mBranch === b.name;
       });
       if (mergeCommit && mergeCommit.parents?.nodes && mergeCommit.parents.nodes.length >= 2) {
@@ -535,10 +566,10 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     if ((!baseSha || !commitMap.has(baseSha)) && commits.length > 0) {
       const oldestTime = bCommits.length > 0 ? new Date(bCommits[0].timestamp).getTime() : 0;
       const mainCommits = Array.from(commitMap.values())
-        .filter(c => c.branch === actualDefaultBranch)
+        .filter((c) => c.branch === actualDefaultBranch)
         .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-      const beforeOrAt = mainCommits.filter(c => new Date(c.timestamp).getTime() <= oldestTime);
+      const beforeOrAt = mainCommits.filter((c) => new Date(c.timestamp).getTime() <= oldestTime);
       if (beforeOrAt.length > 0) {
         baseSha = beforeOrAt[beforeOrAt.length - 1].sha;
       } else if (mainCommits.length > 0) {
@@ -559,15 +590,23 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
       }
     } else {
       const oldest = bCommits[0];
-      const hasParentInMap = oldest.parents && oldest.parents.length > 0 && oldest.parents.some(p => commitMap.has(p));
+      const hasParentInMap =
+        oldest.parents && oldest.parents.length > 0 && oldest.parents.some((p) => commitMap.has(p));
       if (!hasParentInMap && baseSha && commitMap.has(baseSha)) {
-        oldest.parents = [baseSha, ...(oldest.parents ? oldest.parents.filter(p => p !== baseSha) : [])];
+        oldest.parents = [
+          baseSha,
+          ...(oldest.parents ? oldest.parents.filter((p) => p !== baseSha) : []),
+        ];
       }
 
       for (let i = 1; i < bCommits.length; i++) {
         const curr = bCommits[i];
         const prev = bCommits[i - 1];
-        if (!curr.parents || curr.parents.length === 0 || !curr.parents.some(p => commitMap.has(p))) {
+        if (
+          !curr.parents ||
+          curr.parents.length === 0 ||
+          !curr.parents.some((p) => commitMap.has(p))
+        ) {
           curr.parents = [prev.sha];
         }
       }
@@ -586,7 +625,7 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     author: string;
     timestamp: string;
     ciStatus: NodeCIStatus;
-  }> = Array.from(commitMap.values()).map(c => ({
+  }> = Array.from(commitMap.values()).map((c) => ({
     sha: c.sha,
     branch: c.branch,
     parents: c.parents,
@@ -596,23 +635,27 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     ciStatus: shaToStatus.get(c.sha) || 'PASSED',
   }));
 
-  const latestWorkflow = latestRun ? {
-    id: latestRun.id,
-    name: latestRun.name,
-    status: mapWorkflowConclusion(latestRun.conclusion, latestRun.status),
-    durationSeconds: (new Date(latestRun.updated_at).getTime() - new Date(latestRun.created_at).getTime()) / 1000,
-    commitSha: latestRun.head_sha,
-    commitMessage: latestRun.head_commit?.message?.split('\n')[0] || '',
-    author: latestRun.head_commit?.author?.name || '',
-  } : {
-    id: 0,
-    name: 'No recent workflow',
-    status: 'QUEUED' as CIStatus,
-    durationSeconds: 0,
-    commitSha: '',
-    commitMessage: '',
-    author: '',
-  };
+  const latestWorkflow = latestRun
+    ? {
+        id: latestRun.id,
+        name: latestRun.name,
+        status: mapWorkflowConclusion(latestRun.conclusion, latestRun.status),
+        durationSeconds:
+          (new Date(latestRun.updated_at).getTime() - new Date(latestRun.created_at).getTime()) /
+          1000,
+        commitSha: latestRun.head_sha,
+        commitMessage: latestRun.head_commit?.message?.split('\n')[0] || '',
+        author: latestRun.head_commit?.author?.name || '',
+      }
+    : {
+        id: 0,
+        name: 'No recent workflow',
+        status: 'QUEUED' as CIStatus,
+        durationSeconds: 0,
+        commitSha: '',
+        commitMessage: '',
+        author: '',
+      };
 
   let currentCoveragePct = 0;
   const coverageHistory: Array<{ commitSha: string; date: string; coverage: number }> = [];
@@ -657,12 +700,15 @@ export async function fetchAndAggregate(config: ProjectConfig): Promise<Telemetr
     currentBundleKb = cumulativeNet;
   }
 
-  const qualityBenchmarks = (coverageHistory.length > 0 || bundleHistory.length > 0) ? {
-    currentCoveragePct,
-    coverageHistory,
-    currentBundleKb,
-    bundleHistory,
-  } : undefined;
+  const qualityBenchmarks =
+    coverageHistory.length > 0 || bundleHistory.length > 0
+      ? {
+          currentCoveragePct,
+          coverageHistory,
+          currentBundleKb,
+          bundleHistory,
+        }
+      : undefined;
 
   return {
     meta: {

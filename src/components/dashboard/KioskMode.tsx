@@ -36,7 +36,7 @@ export function KioskMode({ className }: KioskModeProps) {
       aria-label="Kiosk TV Mode Controller"
       className={clsx(
         'sticky top-12 z-40 w-full border-b border-[var(--panel-border)] bg-[var(--panel-surface)]/95 backdrop-blur-xs transition-all',
-        className
+        className,
       )}
     >
       {/* Top countdown progress line */}
@@ -181,7 +181,7 @@ export function KioskToggleButton({ className }: { className?: string }) {
         isKiosk
           ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
           : 'border-[var(--panel-border)] bg-[var(--panel-subtle)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]',
-        className
+        className,
       )}
     >
       <svg

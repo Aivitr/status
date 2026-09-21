@@ -1,6 +1,11 @@
 export type CIStatus = 'RUNNING' | 'PASSED' | 'FAILED' | 'QUEUED';
 export type BranchStatus = 'AHEAD' | 'BEHIND' | 'SYNCED' | 'CONFLICT';
-export type EventType = 'PR_MERGED' | 'CI_PASSED' | 'CI_FAILED' | 'RELEASE_PUBLISHED' | 'ISSUE_CLOSED';
+export type EventType =
+  | 'PR_MERGED'
+  | 'CI_PASSED'
+  | 'CI_FAILED'
+  | 'RELEASE_PUBLISHED'
+  | 'ISSUE_CLOSED';
 export type NodeCIStatus = 'PASSED' | 'FAILED' | 'RUNNING';
 
 export interface TelemetrySummaryDTO {
@@ -9,7 +14,7 @@ export interface TelemetrySummaryDTO {
     projectName: string;
     repoFullName: string;
     defaultBranch: string;
-    lastSyncedAt: string;          // ISO timestamp
+    lastSyncedAt: string; // ISO timestamp
     stars: number;
     forks: number;
   };
@@ -30,7 +35,7 @@ export interface TelemetrySummaryDTO {
       closedIssues: number;
       progressPct: number;
     };
-    commitSparkline: number[];     // Last 24 hours commit distribution (length 24)
+    commitSparkline: number[]; // Last 24 hours commit distribution (length 24)
   };
   velocity: {
     netLoc: {

@@ -1,5 +1,7 @@
 allowBuilds:
   sharp: false
   unrs-resolver: false
+  esbuild: true
+  workerd: true
 patchedDependencies:
   '@tomplum/react-git-log': patches/@tomplum__react-git-log.patch

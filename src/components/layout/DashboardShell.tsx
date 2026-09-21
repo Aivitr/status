@@ -1,8 +1,8 @@
-import React from "react";
-import clsx from "clsx";
-import { StatusBar, StatusBarProps } from "./StatusBar";
-import { BentoGrid } from "./BentoGrid";
-import { KioskMode } from "@/components/dashboard/KioskMode";
+import React from 'react';
+import clsx from 'clsx';
+import { StatusBar, StatusBarProps } from './StatusBar';
+import { BentoGrid } from './BentoGrid';
+import { KioskMode } from '@/components/dashboard/KioskMode';
 
 export interface DashboardShellProps {
   children?: React.ReactNode;
@@ -20,16 +20,12 @@ export interface DashboardShellProps {
  * - Top Kiosk TV mode countdown & auto-rotation bar
  * - Responsive 12-column BentoGrid main container
  */
-export function DashboardShell({
-  children,
-  className,
-  statusProps,
-}: DashboardShellProps) {
+export function DashboardShell({ children, className, statusProps }: DashboardShellProps) {
   return (
     <div
       className={clsx(
-        "min-h-screen bg-[var(--canvas-bg)] text-[var(--text-primary)] flex flex-col",
-        className
+        'min-h-screen bg-[var(--canvas-bg)] text-[var(--text-primary)] flex flex-col',
+        className,
       )}
     >
       <StatusBar {...statusProps} />

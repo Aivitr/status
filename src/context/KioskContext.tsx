@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { useProjects } from '@/hooks/use-projects';
 import { useSelectedProject } from '@/context/ProjectContext';
 
@@ -33,7 +40,7 @@ export function KioskProvider({ children }: { children: ReactNode }) {
   const totalProjects = projects.length;
   const currentProjectIndex = Math.max(
     0,
-    projects.findIndex((p) => p.id === selectedProjectId)
+    projects.findIndex((p) => p.id === selectedProjectId),
   );
 
   const nextProject = useCallback(() => {

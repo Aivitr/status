@@ -22,7 +22,7 @@ export function ThemeToggle({ className, showLabel = true }: ThemeToggleProps) {
       aria-label={isDark ? 'Switch to Clean Light' : 'Switch to Industrial Dark'}
       className={clsx(
         'group flex h-7 items-center gap-1.5 rounded-[4px] border border-[var(--panel-border)] bg-[var(--panel-subtle)] px-2 font-mono text-[11px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]',
-        className
+        className,
       )}
     >
       {isDark ? (
@@ -64,9 +64,7 @@ export function ThemeToggle({ className, showLabel = true }: ThemeToggleProps) {
       )}
 
       {showLabel && (
-        <span className="tabular-nums tracking-wider uppercase">
-          {isDark ? 'LIGHT' : 'DARK'}
-        </span>
+        <span className="tabular-nums tracking-wider uppercase">{isDark ? 'LIGHT' : 'DARK'}</span>
       )}
     </button>
   );

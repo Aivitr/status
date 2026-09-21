@@ -39,7 +39,7 @@ export function NetLocCard({ netLoc, timeWindow: propWindow, className }: NetLoc
     <div
       className={clsx(
         'flex flex-col justify-between rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 shadow-none',
-        className
+        className,
       )}
     >
       {/* Card Header: Category & Trend Label */}
@@ -62,7 +62,7 @@ export function NetLocCard({ netLoc, timeWindow: propWindow, className }: NetLoc
             'inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider',
             isNetPositive
               ? 'bg-[var(--status-success)]/10 text-[var(--status-success)]'
-              : 'bg-[var(--status-danger)]/10 text-[var(--status-danger)]'
+              : 'bg-[var(--status-danger)]/10 text-[var(--status-danger)]',
           )}
         >
           <span>{isNetPositive ? '↑' : '↓'}</span>
@@ -75,7 +75,7 @@ export function NetLocCard({ netLoc, timeWindow: propWindow, className }: NetLoc
         <span
           className={clsx(
             'font-mono text-3xl font-bold tracking-tight tabular-nums',
-            isNetPositive ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'
+            isNetPositive ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]',
           )}
         >
           {isNetPositive ? `+${formatNumber(net)}` : formatNumber(net)}

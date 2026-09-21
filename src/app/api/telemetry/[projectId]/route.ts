@@ -15,10 +15,10 @@ const MEMORY_CACHE_TTL_MS = 15_000;
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ projectId: string }> }
+  { params }: { params: Promise<{ projectId: string }> },
 ) {
   const { projectId } = await params;
-  
+
   const config = getProjectConfig(projectId);
   if (!config) {
     return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -35,7 +35,7 @@ export async function GET(
   }
 
   let data = await getTelemetrySummary(projectId);
-  
+
   if (!data) {
     if (process.env.GITHUB_TOKEN) {
       try {

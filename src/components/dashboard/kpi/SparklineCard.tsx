@@ -10,20 +10,25 @@ export interface SparklineCardProps {
   className?: string;
 }
 
-export function SparklineCard({ sparkline, timeWindow: propWindow, className }: SparklineCardProps) {
+export function SparklineCard({
+  sparkline,
+  timeWindow: propWindow,
+  className,
+}: SparklineCardProps) {
   const context = useTimeWindow();
   const activeWindow = propWindow ?? context.timeWindow;
 
-  const data = sparkline && sparkline.length === 24
-    ? sparkline
-    : Array.from({ length: 24 }, (_, i) => (i % 3 === 0 ? 4 : 1));
+  const data =
+    sparkline && sparkline.length === 24
+      ? sparkline
+      : Array.from({ length: 24 }, (_, i) => (i % 3 === 0 ? 4 : 1));
 
   // If LIVE window, focus on the past 4 hours; if 7D, show 7d scale
   const windowMultiplier = activeWindow === '7D' ? 4.2 : 1;
   const totalCommits = Math.round(
     (activeWindow === 'LIVE'
       ? data.slice(-4).reduce((acc, curr) => acc + curr, 0)
-      : data.reduce((acc, curr) => acc + curr, 0)) * (activeWindow === '7D' ? windowMultiplier : 1)
+      : data.reduce((acc, curr) => acc + curr, 0)) * (activeWindow === '7D' ? windowMultiplier : 1),
   );
 
   const maxVal = Math.max(...data, 1);
@@ -52,7 +57,7 @@ export function SparklineCard({ sparkline, timeWindow: propWindow, className }: 
     <div
       className={clsx(
         'flex flex-col justify-between rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 shadow-none',
-        className
+        className,
       )}
     >
       {/* Card Header */}

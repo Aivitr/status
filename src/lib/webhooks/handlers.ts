@@ -5,7 +5,12 @@ import { fetchAndAggregate } from '@/lib/github/aggregator';
 import { getProjectConfig } from '@/lib/config';
 import type { EventType } from '@/lib/types/telemetry';
 
-export async function processWebhookEvent(projectId: string, eventType: string, deliveryId: string, payload: any) {
+export async function processWebhookEvent(
+  projectId: string,
+  eventType: string,
+  deliveryId: string,
+  payload: any,
+) {
   if (redis) {
     try {
       const isNew = await redis.set(`webhook:delivery:${deliveryId}`, 1, { ex: 86400, nx: true });
@@ -31,9 +36,11 @@ export async function processWebhookEvent(projectId: string, eventType: string, 
 
   const acquired = await acquireRefreshLock(projectId);
   if (acquired) {
-    console.log(`[Webhooks] Acquired refresh lock for ${projectId}, starting background aggregation`);
+    console.log(
+      `[Webhooks] Acquired refresh lock for ${projectId}, starting background aggregation`,
+    );
     // Run the aggregation but don't return the promise so the caller can fire-and-forget or waitUntil
-    runAggregation(projectId).catch(err => {
+    runAggregation(projectId).catch((err) => {
       console.error(`[Webhooks] Background aggregation failed for ${projectId}:`, err);
     });
   } else {

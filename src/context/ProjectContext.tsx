@@ -18,14 +18,14 @@ interface ProjectProviderProps {
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const projects = useProjects();
-  
+
   if (projects.length === 0) {
     throw new Error('No projects found in configuration');
   }
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0].id);
 
-  const selectedProject = projects.find(p => p.id === selectedProjectId) || projects[0];
+  const selectedProject = projects.find((p) => p.id === selectedProjectId) || projects[0];
 
   return (
     <ProjectContext.Provider
@@ -42,10 +42,10 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
 export function useSelectedProject(): ProjectContextValue {
   const context = useContext(ProjectContext);
-  
+
   if (context === undefined) {
     throw new Error('useSelectedProject must be used within a ProjectProvider');
   }
-  
+
   return context;
 }

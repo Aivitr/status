@@ -1,5 +1,5 @@
-import React from "react";
-import clsx from "clsx";
+import React from 'react';
+import clsx from 'clsx';
 
 export interface BentoGridProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
@@ -14,13 +14,7 @@ export interface BentoGridProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 export function BentoGrid({ children, className, ...props }: BentoGridProps) {
   return (
-    <div
-      className={clsx(
-        "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8",
-        className
-      )}
-      {...props}
-    >
+    <div className={clsx('mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8', className)} {...props}>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-6 xl:grid-cols-12 xl:gap-4">
         {children}
       </div>

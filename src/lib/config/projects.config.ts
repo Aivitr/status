@@ -1,7 +1,7 @@
 import { ProjectConfig } from '@/lib/types/project-config';
 
 export const projectsConfig: ProjectConfig[] = [
-	{
+  {
     id: 'ccnubox_rn',
     name: 'CCNUBox RN',
     icon: '📦',
@@ -10,10 +10,10 @@ export const projectsConfig: ProjectConfig[] = [
       owner: 'Muxi-X',
       repo: 'ccnubox_rn',
       defaultBranch: 'main',
-		},
-		auth: {
-			githubTokenEnvVar: "GITHUB_TOKEN_MUXIX"
-		},
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIX',
+    },
     theme: {
       preset: 'industrial-dark',
     },

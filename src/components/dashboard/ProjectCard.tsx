@@ -110,7 +110,7 @@ export function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps)
         'bg-[var(--panel-surface)] cursor-pointer select-none focus:outline-none',
         isSelected
           ? 'border-[var(--accent)] ring-1 ring-[var(--accent)] shadow-[0_0_12px_rgba(82,102,255,0.18)]'
-          : 'border-[var(--panel-border)] hover:border-[var(--panel-border-subtle)] hover:bg-[var(--panel-subtle)]/40'
+          : 'border-[var(--panel-border)] hover:border-[var(--panel-border-subtle)] hover:bg-[var(--panel-subtle)]/40',
       )}
     >
       {/* Top row: Icon, Name, and CI Status pill */}
@@ -129,7 +129,7 @@ export function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps)
             className={clsx(
               'inline-flex shrink-0 items-center gap-1.5 rounded-[4px] px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-wide uppercase',
               badgeConfig.bgClass,
-              badgeConfig.textClass
+              badgeConfig.textClass,
             )}
           >
             <span className={clsx('h-1.5 w-1.5 rounded-full', badgeConfig.dotClass)} />

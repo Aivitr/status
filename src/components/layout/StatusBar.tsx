@@ -37,7 +37,7 @@ export function StatusBar({
     <header
       className={clsx(
         'sticky top-0 z-50 w-full border-b border-[var(--panel-border)] bg-[var(--panel-surface)]/95 backdrop-blur-xs',
-        className
+        className,
       )}
     >
       <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -77,7 +77,10 @@ export function StatusBar({
             className="flex items-center gap-2 rounded-[4px] border border-[var(--panel-border-subtle)] bg-[var(--panel-subtle)]/70 px-2 py-1 font-mono text-xs text-[var(--text-secondary)]"
             title="Real-time telemetry channel active"
           >
-            <span className="relative flex h-2.5 w-2.5 items-center justify-center" aria-hidden="true">
+            <span
+              className="relative flex h-2.5 w-2.5 items-center justify-center"
+              aria-hidden="true"
+            >
               {/* Outer 2-layer radial pulse wave */}
               <span className="animate-pulse-ring-2 absolute inline-flex h-full w-full rounded-full bg-[var(--status-success)] opacity-40" />
               <span className="animate-pulse-ring-1 absolute inline-flex h-full w-full rounded-full bg-[var(--status-success)] opacity-75" />

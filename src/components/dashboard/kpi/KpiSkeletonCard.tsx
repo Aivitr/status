@@ -8,7 +8,7 @@ export function KpiSkeletonCard({ className }: { className?: string }) {
     <div
       className={clsx(
         'flex flex-col justify-between rounded-[8px] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 shadow-none',
-        className
+        className,
       )}
     >
       <div className="flex items-start justify-between gap-2">
