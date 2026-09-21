@@ -60,6 +60,58 @@ export const projectsConfig: ProjectConfig[] = [
       timeToShip: true,
     },
   },
+  {
+    id: 'kstack-fe',
+    name: 'Kstack FE',
+    icon: '🎓',
+    description: 'Your campus course companion at CCNU.',
+    language: 'TypeScript',
+    repository: {
+      owner: 'MuxiKeStack',
+      repo: 'muxiK-StackFrontend2.0',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIKESTACK',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIKESTACK',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'kstack-be',
+    name: 'Kstack BE',
+    icon: '⚙️',
+    description: 'Kstack backend service(Go)',
+    language: 'Go',
+    repository: {
+      owner: 'MuxiKeStack',
+      repo: 'be-kstack',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIKESTACK',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIKESTACK',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
   // {
   //   id: 'muxi-core',
   //   name: 'Muxi Core Engine',
