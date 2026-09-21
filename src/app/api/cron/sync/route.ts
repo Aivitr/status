@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getAllProjects } from '@/lib/config';
+import { getEnv } from '@/lib/config/env';
+import { getGithubToken } from '@/lib/github/client';
 import { acquireRefreshLock } from '@/lib/redis/debounce';
 import { fetchAndAggregate } from '@/lib/github/aggregator';
 import { setTelemetrySummary } from '@/lib/redis/telemetry-cache';
 
 export async function GET(request: Request) {
+  const cronSecret = getEnv('CRON_SECRET');
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -22,12 +25,13 @@ export async function GET(request: Request) {
       const lockAcquired = await acquireRefreshLock(project.id);
 
       if (lockAcquired) {
-        if (process.env.GITHUB_TOKEN) {
+        const token = getGithubToken(project);
+        if (token) {
           const data = await fetchAndAggregate(project);
           await setTelemetrySummary(project.id, data);
           results.refreshed.push(project.id);
         } else {
-          results.skipped.push(`${project.id} (no GITHUB_TOKEN)`);
+          results.skipped.push(`${project.id} (no GitHub token found)`);
         }
       } else {
         results.skipped.push(`${project.id} (locked)`);

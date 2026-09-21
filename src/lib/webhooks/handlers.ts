@@ -1,6 +1,6 @@
 import { pushEvent, acquireRefreshLock, setTelemetrySummary } from '@/lib/redis';
 import type { TelemetryEvent } from '@/lib/redis';
-import { redis } from '@/lib/redis/client';
+import { getRedis } from '@/lib/redis/client';
 import { fetchAndAggregate } from '@/lib/github/aggregator';
 import { getProjectConfig } from '@/lib/config';
 import type { EventType } from '@/lib/types/telemetry';
@@ -11,6 +11,7 @@ export async function processWebhookEvent(
   deliveryId: string,
   payload: any,
 ) {
+  const redis = getRedis();
   if (redis) {
     try {
       const isNew = await redis.set(`webhook:delivery:${deliveryId}`, 1, { ex: 86400, nx: true });

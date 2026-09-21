@@ -1,4 +1,4 @@
-import { redis } from '@/lib/redis/client';
+import { getRedis } from '@/lib/redis/client';
 import type { TelemetrySummaryDTO } from '@/lib/types/telemetry';
 
 export type TelemetryEvent = TelemetrySummaryDTO['recentEvents'][0];
@@ -7,6 +7,7 @@ const TTL_1_HOUR = 3600;
 const EVENTS_LIMIT = 50;
 
 export async function getTelemetrySummary(projectId: string): Promise<TelemetrySummaryDTO | null> {
+  const redis = getRedis();
   if (!redis) return null;
   try {
     return await redis.get<TelemetrySummaryDTO>(`telemetry:${projectId}:summary`);
@@ -20,6 +21,7 @@ export async function setTelemetrySummary(
   projectId: string,
   data: TelemetrySummaryDTO,
 ): Promise<void> {
+  const redis = getRedis();
   if (!redis) return;
   try {
     await redis.set(`telemetry:${projectId}:summary`, data, { ex: TTL_1_HOUR });
@@ -29,6 +31,7 @@ export async function setTelemetrySummary(
 }
 
 export async function pushEvent(projectId: string, event: TelemetryEvent): Promise<void> {
+  const redis = getRedis();
   if (!redis) return;
   try {
     const key = `telemetry:${projectId}:events`;
@@ -45,6 +48,7 @@ export async function getRecentEvents(
   projectId: string,
   limit: number = EVENTS_LIMIT,
 ): Promise<TelemetryEvent[]> {
+  const redis = getRedis();
   if (!redis) return [];
   try {
     return await redis.lrange<TelemetryEvent>(`telemetry:${projectId}:events`, 0, limit - 1);

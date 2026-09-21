@@ -8,6 +8,7 @@ async function fetchRest(config: ProjectConfig, path: string, params: Record<str
 
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'muxi-status',
   };
 
   if (token) {

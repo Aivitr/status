@@ -1,7 +1,24 @@
 import { Redis } from '@upstash/redis';
+import { getEnv } from '@/lib/config/env';
 
-// We allow graceful degradation if vars are missing
-const url = process.env.UPSTASH_REDIS_REST_URL;
-const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+let cachedRedis: Redis | null = null;
+let lastUrl: string | undefined;
+let lastToken: string | undefined;
 
-export const redis = url && token ? new Redis({ url, token }) : null;
+export function getRedis(): Redis | null {
+  const url = getEnv('UPSTASH_REDIS_REST_URL');
+  const token = getEnv('UPSTASH_REDIS_REST_TOKEN');
+
+  if (!url || !token) {
+    return null;
+  }
+
+  if (cachedRedis && lastUrl === url && lastToken === token) {
+    return cachedRedis;
+  }
+
+  lastUrl = url;
+  lastToken = token;
+  cachedRedis = new Redis({ url, token });
+  return cachedRedis;
+}

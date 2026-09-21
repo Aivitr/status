@@ -1,8 +1,9 @@
-import { redis } from '@/lib/redis/client';
+import { getRedis } from '@/lib/redis/client';
 
 const LOCK_TTL_SECONDS = 30;
 
 export async function acquireRefreshLock(projectId: string): Promise<boolean> {
+  const redis = getRedis();
   if (!redis) {
     console.warn(`[Redis] Skipping lock acquisition for ${projectId} (Redis not configured)`);
     return true; // Fail open to allow development without Redis
