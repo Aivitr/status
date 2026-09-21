@@ -12,7 +12,9 @@ export const projectConfigSchema = z.object({
     defaultBranch: z.string(),
   }),
   auth: z.object({
+    token: z.string().optional(),
     githubTokenEnvVar: z.string().optional(),
+    webhookSecret: z.string().optional(),
     webhookSecretEnvVar: z.string().optional(),
   }).optional(),
   theme: z.object({

@@ -10,7 +10,10 @@ export const projectsConfig: ProjectConfig[] = [
       owner: 'Muxi-X',
       repo: 'ccnubox_rn',
       defaultBranch: 'main',
-    },
+		},
+		auth: {
+			githubTokenEnvVar: "GITHUB_TOKEN_MUXIX"
+		},
     theme: {
       preset: 'industrial-dark',
     },

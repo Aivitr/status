@@ -9,7 +9,9 @@ export interface ProjectConfig {
     defaultBranch: string;
   };
   auth?: {
+    token?: string;
     githubTokenEnvVar?: string;
+    webhookSecret?: string;
     webhookSecretEnvVar?: string;
   };
   theme?: {

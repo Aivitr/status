@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllProjects } from '@/lib/config';
-import { verifySignature } from '@/lib/webhooks/verify';
+import { verifySignature, getWebhookSecret } from '@/lib/webhooks/verify';
 import { processWebhookEvent } from '@/lib/webhooks/handlers';
 
 export async function POST(request: Request) {
@@ -35,8 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Repository not configured' }, { status: 404 });
     }
 
-    const secretEnvVar = project.auth?.webhookSecretEnvVar;
-    const secret = (secretEnvVar ? process.env[secretEnvVar] : process.env.WEBHOOK_SECRET) || '';
+    const secret = getWebhookSecret(project);
 
     if (!verifySignature(rawBody, signature, secret)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });

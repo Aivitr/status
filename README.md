@@ -108,10 +108,30 @@ pnpm start    # 启动生产服务器
 | 变量名 | 必填 | 说明 |
 |--------|------|------|
 | `GITHUB_TOKEN` | 是 | GitHub Personal Access Token，用于调用 GraphQL / REST API |
-| `WEBHOOK_SECRET` | 是 | GitHub Webhook 签名密钥，用于 HMAC-SHA256 验签 |
+| `WEBHOOK_SECRET` | 否 | 全局 GitHub Webhook 签名密钥，用于 HMAC-SHA256 验签 |
 | `UPSTASH_REDIS_REST_URL` | 是 | Upstash Redis REST endpoint |
 | `UPSTASH_REDIS_REST_TOKEN` | 是 | Upstash Redis REST 鉴权令牌 |
 | `CRON_SECRET` | 否 | Cron 定时任务鉴权密钥 (Vercel Cron 使用) |
+
+### 细粒度凭据解析 (Granular Token Resolution)
+
+平台支持多层级、细粒度的 GitHub Token 和 Webhook Secret 解析，以支持多组织、多仓库的不同权限隔离要求。解析优先级如下（以 `owner: muxi-tech`, `repo: muxi-core`, `id: muxi-core-web` 为例）：
+
+**GitHub Token 解析顺序:**
+1. 仓库配置直接指定: `config.auth.token`
+2. 仓库配置指定环境变量名: `config.auth.githubTokenEnvVar` (如读取 `process.env.MY_SPECIAL_TOKEN`)
+3. 仓库级自动映射: `GITHUB_TOKEN_MUXI_TECH_MUXI_CORE` 或项目 ID `GITHUB_TOKEN_MUXI_CORE_WEB`
+4. 组织级自动映射: `GITHUB_TOKEN_MUXI_TECH`
+5. 全局后备环境变量: `GITHUB_TOKEN`
+
+**Webhook Secret 解析顺序:**
+1. 仓库配置直接指定: `config.auth.webhookSecret`
+2. 仓库配置指定环境变量名: `config.auth.webhookSecretEnvVar`
+3. 仓库级自动映射: `WEBHOOK_SECRET_MUXI_TECH_MUXI_CORE` 或项目 ID `WEBHOOK_SECRET_MUXI_CORE_WEB`
+4. 组织级自动映射: `WEBHOOK_SECRET_MUXI_TECH`
+5. 全局后备环境变量: `WEBHOOK_SECRET`
+
+**提示**: 自动映射规则会将特殊字符如 `-`、`.` 替换为下划线 `_` 并转为大写。
 
 ---
 
