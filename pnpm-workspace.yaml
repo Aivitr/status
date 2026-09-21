@@ -3,5 +3,7 @@ allowBuilds:
   unrs-resolver: false
   esbuild: true
   workerd: true
+overrides:
+  yargs: 18.1.0
 patchedDependencies:
   '@tomplum/react-git-log': patches/@tomplum__react-git-log.patch

@@ -162,6 +162,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  yargs: 18.1.0
+
 patchedDependencies:
   '@tomplum/react-git-log': 90d7f40f0e48af3e7ce25815bbc8d5951604dff495155b1942307bb4ae23c73c
 
@@ -3072,8 +3075,8 @@ packages:
     resolution: {integrity: sha512-rwu/ClNdSMpkSrUb+d6BRsSkLUq1fmfsY6TOpYzTwvwkg1/NRG85KBy3kq++A8LKQwX6lsu+aWad+2khvuXrqw==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=23}
 
-  yargs@18.2.0:
-    resolution: {integrity: sha512-9OpKOLeaoNFecEp7P6iYbzze/5CqWoH7N3SMs/6y1XF4nMvFMspEGZzJ6uFi9MmQwXhyzqYoSEKO3tvA3Z/o2w==}
+  yargs@18.1.0:
+    resolution: {integrity: sha512-2rAgRKu54VsHkqI0/tYkmluGXHD4KW7yZoycuqDQ15QOTnc2VVfy0nN/1eMhnQLO00A+dwtK20xuCnc1YGeUyg==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=23}
 
   youch-core@0.3.3:
@@ -4229,7 +4232,7 @@ snapshots:
       next: 16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       ts-tqdm: 0.8.6
       wrangler: 4.135.0(@types/node@20.19.43)
-      yargs: 18.2.0
+      yargs: 18.1.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -5960,7 +5963,7 @@ snapshots:
 
   yargs-parser@22.0.0: {}
 
-  yargs@18.2.0:
+  yargs@18.1.0:
     dependencies:
       cliui: 9.0.1
       escalade: 3.2.0
