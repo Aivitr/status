@@ -13,9 +13,7 @@ export interface ProjectCardProps {
 }
 
 const LANGUAGE_MAP: Record<string, string> = {
-  'muxi-core': 'Rust',
-  'muxi-status': 'TypeScript',
-  'muxi-cloud': 'Go',
+  ccnubox_rn: 'React Native',
 };
 
 function getStatusBadgeConfig(status: CIStatus | undefined) {

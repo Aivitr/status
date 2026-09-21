@@ -21,7 +21,7 @@
 ## 技术栈
 
 | 层级 | 选型 | 说明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | 框架 | **Next.js 16 (App Router)** | Route Handlers 提供 Serverless API，前后端同仓 |
 | 视图 | **React 19** | Server Components + Client Components 混合渲染 |
 | 语言 | **TypeScript 5 (Strict)** | 全链路类型安全，Zod 运行时校验 |
@@ -75,8 +75,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/muxi-tech/muxi-status.git
-cd muxi-status
+git clone https://github.com/Muxi-X/status.git
+cd status
 
 # 安装依赖
 pnpm install
@@ -106,7 +106,7 @@ pnpm start    # 启动生产服务器
 在项目根目录创建 `.env.local`，参照 `.env.example`:
 
 | 变量名 | 必填 | 说明 |
-|--------|------|------|
+| -------- | ------ | ------ |
 | `GITHUB_TOKEN` | 是 | GitHub Personal Access Token，用于调用 GraphQL / REST API |
 | `WEBHOOK_SECRET` | 否 | 全局 GitHub Webhook 签名密钥，用于 HMAC-SHA256 验签 |
 | `UPSTASH_REDIS_REST_URL` | 是 | Upstash Redis REST endpoint |
@@ -118,6 +118,7 @@ pnpm start    # 启动生产服务器
 平台支持多层级、细粒度的 GitHub Token 和 Webhook Secret 解析，以支持多组织、多仓库的不同权限隔离要求。解析优先级如下（以 `owner: muxi-tech`, `repo: muxi-core`, `id: muxi-core-web` 为例）：
 
 **GitHub Token 解析顺序:**
+
 1. 仓库配置直接指定: `config.auth.token`
 2. 仓库配置指定环境变量名: `config.auth.githubTokenEnvVar` (如读取 `process.env.MY_SPECIAL_TOKEN`)
 3. 仓库级自动映射: `GITHUB_TOKEN_MUXI_TECH_MUXI_CORE` 或项目 ID `GITHUB_TOKEN_MUXI_CORE_WEB`
@@ -125,6 +126,7 @@ pnpm start    # 启动生产服务器
 5. 全局后备环境变量: `GITHUB_TOKEN`
 
 **Webhook Secret 解析顺序:**
+
 1. 仓库配置直接指定: `config.auth.webhookSecret`
 2. 仓库配置指定环境变量名: `config.auth.webhookSecretEnvVar`
 3. 仓库级自动映射: `WEBHOOK_SECRET_MUXI_TECH_MUXI_CORE` 或项目 ID `WEBHOOK_SECRET_MUXI_CORE_WEB`
@@ -185,7 +187,7 @@ Tier 1 指标 (Milestone / Commit / CI / PR) 开箱即用，不需要被监控�
 在被监控仓库的 **Settings > Webhooks** 中添加:
 
 | 配置项 | 值 |
-|--------|----|
+| -------- | ---- |
 | Payload URL | `https://your-domain.com/api/webhooks/github` |
 | Content type | `application/json` |
 | Secret | 与 `WEBHOOK_SECRET` 环境变量一致 |
