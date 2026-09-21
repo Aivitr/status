@@ -6,6 +6,7 @@ export const projectConfigSchema = z.object({
   name: z.string(),
   icon: z.string(),
   description: z.string(),
+  language: z.string().optional(),
   repository: z.object({
     owner: z.string(),
     repo: z.string(),

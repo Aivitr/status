@@ -12,10 +12,6 @@ export interface ProjectCardProps {
   onSelect: (id: string) => void;
 }
 
-const LANGUAGE_MAP: Record<string, string> = {
-  ccnubox_rn: 'React Native',
-};
-
 function getStatusBadgeConfig(status: CIStatus | undefined) {
   switch (status) {
     case 'PASSED':
@@ -92,7 +88,7 @@ function MiniSparkline({ data }: MiniSparklineProps) {
 
 export function ProjectCard({ project, isSelected, onSelect }: ProjectCardProps) {
   const { data: telemetry } = useTelemetry(project.id);
-  const language = LANGUAGE_MAP[project.id] ?? 'TypeScript';
+  const language = project.language ?? 'TypeScript';
 
   const ciStatus = telemetry?.vitalPulse.latestWorkflow.status;
   const stars = telemetry?.meta.stars ?? 0;

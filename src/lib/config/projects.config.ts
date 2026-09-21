@@ -6,6 +6,7 @@ export const projectsConfig: ProjectConfig[] = [
     name: 'CCNUBox RN',
     icon: '📦',
     description: 'Toolbox for CCNU students',
+    language: 'React Native',
     repository: {
       owner: 'Muxi-X',
       repo: 'ccnubox_rn',
@@ -31,6 +32,32 @@ export const projectsConfig: ProjectConfig[] = [
       //   enabled: true,
       //   budgetKb: 200,
       // },
+    },
+  },
+  {
+    id: 'ccnubox-be',
+    name: 'CCNUBox BE',
+    icon: '🧩',
+    description: 'CCNUBox backend service (Go)',
+    language: 'Go',
+    repository: {
+      owner: 'asynccnu',
+      repo: 'ccnubox-be',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_ASYNCCNU',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_ASYNCCNU',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
     },
   },
   // {
