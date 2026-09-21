@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
 import type { ProjectConfig } from '@/lib/types/project-config';
-import { getEnv } from '@/lib/config/env';
 
 export function getWebhookSecret(config: ProjectConfig): string {
   // 1. Repo-level explicitly specified in config
@@ -11,11 +10,11 @@ export function getWebhookSecret(config: ProjectConfig): string {
     return config.auth.webhookSecret;
   }
 
-  if (config.auth?.webhookSecretEnvVar && getEnv(config.auth.webhookSecretEnvVar)) {
+  if (config.auth?.webhookSecretEnvVar && process.env[config.auth.webhookSecretEnvVar]) {
     console.debug(
       `[Webhook Secret] Resolved from explicit env var ${config.auth.webhookSecretEnvVar} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(config.auth.webhookSecretEnvVar) as string;
+    return process.env[config.auth.webhookSecretEnvVar] as string;
   }
 
   const owner = config.repository.owner.toUpperCase().replace(/[-.]/g, '_');
@@ -24,36 +23,36 @@ export function getWebhookSecret(config: ProjectConfig): string {
 
   // 2. Repo-level automatic environment variable convention
   const envVarRepo = `WEBHOOK_SECRET_${owner}_${repo}`;
-  if (getEnv(envVarRepo)) {
+  if (process.env[envVarRepo]) {
     console.debug(
       `[Webhook Secret] Resolved from ${envVarRepo} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(envVarRepo) as string;
+    return process.env[envVarRepo] as string;
   }
 
   const envVarProject = `WEBHOOK_SECRET_${projectId}`;
-  if (getEnv(envVarProject)) {
+  if (process.env[envVarProject]) {
     console.debug(
       `[Webhook Secret] Resolved from ${envVarProject} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(envVarProject) as string;
+    return process.env[envVarProject] as string;
   }
 
   // 3. Owner-level automatic environment variable convention
   const envVarOwner = `WEBHOOK_SECRET_${owner}`;
-  if (getEnv(envVarOwner)) {
+  if (process.env[envVarOwner]) {
     console.debug(
       `[Webhook Secret] Resolved from ${envVarOwner} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(envVarOwner) as string;
+    return process.env[envVarOwner] as string;
   }
 
   // 4. Global fallback
-  if (getEnv('WEBHOOK_SECRET')) {
+  if (process.env.WEBHOOK_SECRET) {
     console.debug(
       `[Webhook Secret] Resolved from WEBHOOK_SECRET fallback for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv('WEBHOOK_SECRET') as string;
+    return process.env.WEBHOOK_SECRET;
   }
 
   console.warn(

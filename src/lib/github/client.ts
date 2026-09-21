@@ -1,6 +1,5 @@
 import { graphql } from '@octokit/graphql';
 import type { ProjectConfig } from '@/lib/types/project-config';
-import { getEnv } from '@/lib/config/env';
 
 export function getGithubToken(config: ProjectConfig): string {
   // 1. Repo-level explicitly specified in config
@@ -11,11 +10,11 @@ export function getGithubToken(config: ProjectConfig): string {
     return config.auth.token;
   }
 
-  if (config.auth?.githubTokenEnvVar && getEnv(config.auth.githubTokenEnvVar)) {
+  if (config.auth?.githubTokenEnvVar && process.env[config.auth.githubTokenEnvVar]) {
     console.debug(
       `[GitHub Token] Resolved from explicit env var ${config.auth.githubTokenEnvVar} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(config.auth.githubTokenEnvVar) as string;
+    return process.env[config.auth.githubTokenEnvVar] as string;
   }
 
   const owner = config.repository.owner.toUpperCase().replace(/[-.]/g, '_');
@@ -24,36 +23,36 @@ export function getGithubToken(config: ProjectConfig): string {
 
   // 2. Repo-level automatic environment variable convention
   const envVarRepo = `GITHUB_TOKEN_${owner}_${repo}`;
-  if (getEnv(envVarRepo)) {
+  if (process.env[envVarRepo]) {
     console.debug(
       `[GitHub Token] Resolved from ${envVarRepo} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(envVarRepo) as string;
+    return process.env[envVarRepo] as string;
   }
 
   const envVarProject = `GITHUB_TOKEN_${projectId}`;
-  if (getEnv(envVarProject)) {
+  if (process.env[envVarProject]) {
     console.debug(
       `[GitHub Token] Resolved from ${envVarProject} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(envVarProject) as string;
+    return process.env[envVarProject] as string;
   }
 
   // 3. Owner-level automatic environment variable convention
   const envVarOwner = `GITHUB_TOKEN_${owner}`;
-  if (getEnv(envVarOwner)) {
+  if (process.env[envVarOwner]) {
     console.debug(
       `[GitHub Token] Resolved from ${envVarOwner} for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv(envVarOwner) as string;
+    return process.env[envVarOwner] as string;
   }
 
   // 4. Global fallback
-  if (getEnv('GITHUB_TOKEN')) {
+  if (process.env.GITHUB_TOKEN) {
     console.debug(
       `[GitHub Token] Resolved from GITHUB_TOKEN fallback for ${config.repository.owner}/${config.repository.repo}`,
     );
-    return getEnv('GITHUB_TOKEN') as string;
+    return process.env.GITHUB_TOKEN;
   }
 
   console.warn(

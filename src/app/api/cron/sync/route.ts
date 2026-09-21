@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getAllProjects } from '@/lib/config';
-import { getEnv } from '@/lib/config/env';
 import { getGithubToken } from '@/lib/github/client';
 import { acquireRefreshLock } from '@/lib/redis/debounce';
 import { fetchAndAggregate } from '@/lib/github/aggregator';
 import { setTelemetrySummary } from '@/lib/redis/telemetry-cache';
 
 export async function GET(request: Request) {
-  const cronSecret = getEnv('CRON_SECRET');
+  const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
