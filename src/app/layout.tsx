@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: 'Muxi Status',
   description: 'GitHub Live Telemetry Dashboard',
   icons: {
-    icon: '/muxi.png',
+    icon: '/favicon.ico',
     apple: '/muxi.png',
   },
 };
