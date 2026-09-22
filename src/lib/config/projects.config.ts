@@ -112,6 +112,58 @@ export const projectsConfig: ProjectConfig[] = [
       timeToShip: true,
     },
   },
+  {
+    id: 'muxifresh-fe',
+    name: 'MuXiFresh FE',
+    icon: '🎨',
+    description: 'Fresh frontend (React/TypeScript)',
+    language: 'TypeScript',
+    repository: {
+      owner: 'Muxi-X',
+      repo: 'MuXi-Fresh-Fe-2.0',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIX',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIX',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'muxifresh-be',
+    name: 'MuXiFresh BE',
+    icon: '🌱',
+    description: 'Fresh backend (Go)',
+    language: 'Go',
+    repository: {
+      owner: 'Muxi-X',
+      repo: 'MuXiFresh-Be-2.0',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIX',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIX',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
   // {
   //   id: 'muxi-core',
   //   name: 'Muxi Core Engine',
