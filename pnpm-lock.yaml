@@ -177,7 +177,7 @@ importers:
         version: 9.0.5
       '@opennextjs/cloudflare':
         specifier: ^1.20.6
-        version: 1.20.6(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)(wrangler@4.135.0(@cloudflare/workers-types@5.20260922.1)(@types/node@20.19.43))
+        version: 1.20.6(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)(wrangler@4.135.0(@cloudflare/workers-types@5.20260918.1)(@types/node@20.19.43))
       '@tomplum/react-git-log':
         specifier: ^3.5.1
         version: 3.5.1(patch_hash=90d7f40f0e48af3e7ce25815bbc8d5951604dff495155b1942307bb4ae23c73c)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -228,8 +228,8 @@ importers:
         version: 4.6.5
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^5.20260922.1
-        version: 5.20260922.1
+        specifier: 5.20260918.1
+        version: 5.20260918.1
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3
@@ -256,7 +256,7 @@ importers:
         version: 5.9.3
       wrangler:
         specifier: ^4.135.0
-        version: 4.135.0(@cloudflare/workers-types@5.20260922.1)(@types/node@20.19.43)
+        version: 4.135.0(@cloudflare/workers-types@5.20260918.1)(@types/node@20.19.43)
 
 packages:
 
@@ -615,8 +615,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@5.20260922.1':
-    resolution: {integrity: sha512-zZVBBFJan5Kw+flEgSHqqCZ0LvHPv5LvfP2igmQiLvZ4fFQYsI4epN9cGiCQqaCyhCzQuqWEyK1Lamzm3QJAmw==}
+  '@cloudflare/workers-types@5.20260918.1':
+    resolution: {integrity: sha512-bUGc9gIdooYPi6lAUoB/eBXmy/ev9ok0XvDLzfJZQVCT8WCEQwv9f6smz6XeE83JzpX6ZSVi9CG1aDORnErYRQ==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -3799,7 +3799,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20260918.1':
     optional: true
 
-  '@cloudflare/workers-types@5.20260922.1': {}
+  '@cloudflare/workers-types@5.20260918.1': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -4218,7 +4218,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@opennextjs/cloudflare@1.20.6(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)(wrangler@4.135.0(@cloudflare/workers-types@5.20260922.1)(@types/node@20.19.43))':
+  '@opennextjs/cloudflare@1.20.6(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)(wrangler@4.135.0(@cloudflare/workers-types@5.20260918.1)(@types/node@20.19.43))':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@dotenvx/dotenvx': 1.31.0
@@ -4230,7 +4230,7 @@ snapshots:
       glob: 12.0.0
       next: 16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       ts-tqdm: 0.8.6
-      wrangler: 4.135.0(@cloudflare/workers-types@5.20260922.1)(@types/node@20.19.43)
+      wrangler: 4.135.0(@cloudflare/workers-types@5.20260918.1)(@types/node@20.19.43)
       yargs: 18.1.0
     transitivePeerDependencies:
       - encoding
@@ -5920,7 +5920,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260918.1
       '@cloudflare/workerd-windows-64': 1.20260918.1
 
-  wrangler@4.135.0(@cloudflare/workers-types@5.20260922.1)(@types/node@20.19.43):
+  wrangler@4.135.0(@cloudflare/workers-types@5.20260918.1)(@types/node@20.19.43):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260918.1)
@@ -5931,7 +5931,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20260918.1
     optionalDependencies:
-      '@cloudflare/workers-types': 5.20260922.1
+      '@cloudflare/workers-types': 5.20260918.1
       fsevents: 2.3.3
     transitivePeerDependencies:
       - '@types/node'
