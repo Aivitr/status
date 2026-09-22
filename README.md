@@ -27,7 +27,7 @@
 | 语言 | **TypeScript 5 (Strict)** | 全链路类型安全，Zod 运行时校验 |
 | 样式 | **Tailwind CSS v4** | 原生 CSS 变量映射 OKLCH 主题 Token |
 | 图表 | **@visx/visx** | D3 级精度的 SVG 自定义渲染，折线图 / DAG / 火花线 |
-| 缓存 | **Upstash Redis** | Serverless HTTP API，Edge Runtime 兼容，事件流 + 防抖锁 |
+| 存储/缓存 | **Cloudflare D1** | 原生 Serverless SQLite，事件流 + 分布式防抖锁 + 快照缓存 |
 | 数据获取 | **SWR** | 客户端无感轮询，断网平滑降级 |
 | 数据源 | **GitHub GraphQL / REST API** | 单次 GraphQL 批量查询，配额消耗极低 |
 | 部署 | **Vercel** | 全球 CDN + Edge Functions + Cron Jobs |
@@ -45,7 +45,7 @@
          |                           |
     读取聚合缓存               接收 GitHub Webhook
          v                           v
- [Upstash Redis]  <────────  [Webhook Handler]
+ [Cloudflare D1]  <────────  [Webhook Handler]
     事件流 + 快照缓存                 |
          ^                     30s 防抖后触发
          |                     增量 GraphQL 拉取
@@ -57,7 +57,7 @@
 **关键设计决策:**
 
 1. **Webhook 作为事件闹钟**，不作为数据源。收到 `push` / `workflow_run` 通知后，平台自主调用 GitHub API 拉取完整数据
-2. **Redis 键锁防抖** (`SET lock:refresh:{projectId} 1 EX 30 NX`)，30 秒内连续推送只触发一次重度拉取
+2. **D1 原子锁防抖**，30 秒内连续推送只触发一次重度拉取
 3. **浏览器永不接触 GitHub Token**，凭据隔离在服务端，享受 5,000 次/小时 API 配额
 
 ---
@@ -69,7 +69,7 @@
 - **Node.js** >= 18
 - **pnpm** >= 9 (`corepack enable && corepack prepare pnpm@latest`)
 - **GitHub Personal Access Token** (需要 `repo` 和 `read:org` 权限)
-- **Upstash Redis** 实例 ([免费创建](https://console.upstash.com))
+- **Cloudflare D1** (本地运行自动使用 Miniflare 模拟，零外部依赖)
 
 ### 安装与启动
 
@@ -109,9 +109,7 @@ pnpm start    # 启动生产服务器
 | -------- | ------ | ------ |
 | `GITHUB_TOKEN` | 是 | GitHub Personal Access Token，用于调用 GraphQL / REST API |
 | `WEBHOOK_SECRET` | 否 | 全局 GitHub Webhook 签名密钥，用于 HMAC-SHA256 验签 |
-| `UPSTASH_REDIS_REST_URL` | 是 | Upstash Redis REST endpoint |
-| `UPSTASH_REDIS_REST_TOKEN` | 是 | Upstash Redis REST 鉴权令牌 |
-| `CRON_SECRET` | 否 | Cron 定时任务鉴权密钥 (Vercel Cron 使用) |
+| `CRON_SECRET` | 否 | Cron 定时任务鉴权密钥 (定时同步任务使用) |
 
 ### 细粒度凭据解析 (Granular Token Resolution)
 
@@ -144,7 +142,7 @@ pnpm start    # 启动生产服务器
 ```typescript
 export const projectsConfig: ProjectConfig[] = [
   {
-    id: 'my-project',           // 唯一标识，用于路由和 Redis 键
+    id: 'my-project',           // 唯一标识，用于路由和数据库键
     name: 'My Project',         // 看板上的展示名称
     icon: '🚀',                 // Emoji 图标
     description: '项目简介',
@@ -251,7 +249,7 @@ src/
 └── lib/                    # 核心逻辑
     ├── config/             # projects.config.ts 项目配置
     ├── github/             # GitHub GraphQL 客户端
-    ├── redis/              # Upstash Redis 服务层
+    ├── db/                 # Cloudflare D1 存储与缓存服务层
     └── types/              # TypeScript 类型定义
 ```
 

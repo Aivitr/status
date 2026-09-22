@@ -1,7 +1,11 @@
 import type { ProjectConfig } from '@/lib/types/project-config';
 import { getGithubToken } from './client';
 
-async function fetchRest(config: ProjectConfig, path: string, params: Record<string, string> = {}) {
+async function fetchRest(
+  config: ProjectConfig,
+  path: string,
+  params: Record<string, string> = {},
+): Promise<any> {
   const token = getGithubToken(config);
   const url = new URL(`https://api.github.com${path}`);
   Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));

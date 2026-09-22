@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getProjectConfig } from '@/lib/config';
-import { getTelemetrySummary, setTelemetrySummary } from '@/lib/redis/telemetry-cache';
+import { getTelemetrySummary, setTelemetrySummary } from '@/lib/db';
 import { getGithubToken } from '@/lib/github/client';
 import { fetchAndAggregate } from '@/lib/github/aggregator';
 import { generateMockTelemetry } from '@/lib/mock/telemetry-mock';

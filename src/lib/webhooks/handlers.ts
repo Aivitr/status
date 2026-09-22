@@ -1,6 +1,5 @@
-import { pushEvent, acquireRefreshLock, setTelemetrySummary } from '@/lib/redis';
-import type { TelemetryEvent } from '@/lib/redis';
-import { getRedis } from '@/lib/redis/client';
+import { pushEvent, acquireRefreshLock, setTelemetrySummary, isWebhookDeliveryNew } from '@/lib/db';
+import type { TelemetryEvent } from '@/lib/db';
 import { fetchAndAggregate } from '@/lib/github/aggregator';
 import { getProjectConfig } from '@/lib/config';
 import type { EventType } from '@/lib/types/telemetry';
@@ -11,17 +10,14 @@ export async function processWebhookEvent(
   deliveryId: string,
   payload: any,
 ) {
-  const redis = getRedis();
-  if (redis) {
-    try {
-      const isNew = await redis.set(`webhook:delivery:${deliveryId}`, 1, { ex: 86400, nx: true });
-      if (isNew !== 'OK') {
-        console.log(`[Webhooks] Duplicate event delivery ${deliveryId}, skipping`);
-        return;
-      }
-    } catch (err) {
-      console.warn(`[Webhooks] Failed to check deduplication for ${deliveryId}:`, err);
+  try {
+    const isNew = await isWebhookDeliveryNew(deliveryId);
+    if (!isNew) {
+      console.log(`[Webhooks] Duplicate event delivery ${deliveryId}, skipping`);
+      return;
     }
+  } catch (err) {
+    console.warn(`[Webhooks] Failed to check deduplication for ${deliveryId}:`, err);
   }
 
   const config = getProjectConfig(projectId);

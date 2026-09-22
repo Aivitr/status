@@ -3,7 +3,8 @@
 import useSWR from 'swr';
 import type { TelemetrySummaryDTO } from '@/lib/types/telemetry';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) =>
+  fetch(url).then((res) => res.json() as Promise<TelemetrySummaryDTO>);
 
 export function useTelemetry(projectId: string) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<TelemetrySummaryDTO>(
