@@ -34,4 +34,11 @@
     // see https://opennext.js.org/cloudflare/howtos/image
     "binding": "IMAGES",
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "status-db",
+      "database_id": "a5e5e6a6-e47f-47e4-80f2-f3b36eafcdcf",
+    },
+  ],
 }

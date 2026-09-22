@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Muxi Status',
   description: 'GitHub Live Telemetry Dashboard',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/muxi.png',
+  },
 };
 
 export default function RootLayout({

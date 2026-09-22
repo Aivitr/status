@@ -60,6 +60,162 @@ export const projectsConfig: ProjectConfig[] = [
       timeToShip: true,
     },
   },
+  {
+    id: 'kstack-fe',
+    name: 'Kstack FE',
+    icon: '🎓',
+    description: 'Your campus course companion at CCNU.',
+    language: 'TypeScript',
+    repository: {
+      owner: 'MuxiKeStack',
+      repo: 'muxiK-StackFrontend2.0',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIKESTACK',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIKESTACK',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'kstack-be',
+    name: 'Kstack BE',
+    icon: '⚙️',
+    description: 'Kstack backend service(Go)',
+    language: 'Go',
+    repository: {
+      owner: 'MuxiKeStack',
+      repo: 'be-kstack',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIKESTACK',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIKESTACK',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'muxifresh-fe',
+    name: 'MuXiFresh FE',
+    icon: '🎨',
+    description: 'Fresh frontend (React/TypeScript)',
+    language: 'TypeScript',
+    repository: {
+      owner: 'Muxi-X',
+      repo: 'MuXi-Fresh-Fe-2.0',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIX',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIX',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'muxifresh-be',
+    name: 'MuXiFresh BE',
+    icon: '🌱',
+    description: 'Fresh backend (Go)',
+    language: 'Go',
+    repository: {
+      owner: 'Muxi-X',
+      repo: 'MuXiFresh-Be-2.0',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIX',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIX',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'eventglide-fe',
+    name: 'EventGlide FE',
+    icon: '🎟️',
+    description: 'EventGlide frontend (React/TypeScript)',
+    language: 'TypeScript',
+    repository: {
+      owner: 'muxi-mini-project',
+      repo: '2025-EventGlide-FrontEnd',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIMINIPROJECT',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIMINIPROJECT',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'eventglide-be',
+    name: 'EventGlide BE',
+    icon: '🎪',
+    description: 'EventGlide backend (Go)',
+    language: 'Go',
+    repository: {
+      owner: 'muxi-mini-project',
+      repo: '2025-EventGlide-Backend',
+      defaultBranch: 'master',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIMINIPROJECT',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIMINIPROJECT',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
   // {
   //   id: 'muxi-core',
   //   name: 'Muxi Core Engine',

@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAllProjects } from '@/lib/config';
 import { getGithubToken } from '@/lib/github/client';
-import { acquireRefreshLock } from '@/lib/redis/debounce';
+import { acquireRefreshLock, setTelemetrySummary } from '@/lib/db';
 import { fetchAndAggregate } from '@/lib/github/aggregator';
-import { setTelemetrySummary } from '@/lib/redis/telemetry-cache';
 
 export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;

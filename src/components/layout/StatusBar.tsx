@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import clsx from 'clsx';
 import { ThemeToggle } from './ThemeToggle';
 import { KioskToggleButton } from '@/components/dashboard/KioskMode';
@@ -43,19 +44,15 @@ export function StatusBar({
       <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left: Brand Logo & Text */}
         <div className="flex items-center gap-2.5">
-          <div className="flex h-6 w-6 items-center justify-center rounded-[4px] border border-[var(--panel-border)] bg-[var(--panel-subtle)] text-[var(--accent)]">
-            <svg
-              className="h-3.5 w-3.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
+          <div className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-[4px] border border-[var(--panel-border)] bg-white shadow-2xs">
+            <Image
+              src="/muxi.png"
+              alt="Muxi Logo"
+              width={24}
+              height={24}
+              className="h-full w-full object-contain p-0.5"
+              priority
+            />
           </div>
           <span className="font-mono text-xs font-bold tracking-[0.14em] text-[var(--accent)] [font-variant:all-small-caps]">
             Muxi Status
