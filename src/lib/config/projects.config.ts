@@ -164,6 +164,58 @@ export const projectsConfig: ProjectConfig[] = [
       timeToShip: true,
     },
   },
+  {
+    id: 'eventglide-fe',
+    name: 'EventGlide FE',
+    icon: '🎟️',
+    description: 'EventGlide frontend (React/TypeScript)',
+    language: 'TypeScript',
+    repository: {
+      owner: 'muxi-mini-project',
+      repo: '2025-EventGlide-FrontEnd',
+      defaultBranch: 'main',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIMINIPROJECT',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIMINIPROJECT',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
+  {
+    id: 'eventglide-be',
+    name: 'EventGlide BE',
+    icon: '🎪',
+    description: 'EventGlide backend (Go)',
+    language: 'Go',
+    repository: {
+      owner: 'muxi-mini-project',
+      repo: '2025-EventGlide-Backend',
+      defaultBranch: 'master',
+    },
+    auth: {
+      githubTokenEnvVar: 'GITHUB_TOKEN_MUXIMINIPROJECT',
+      webhookSecretEnvVar: 'WEBHOOK_SECRET_MUXIMINIPROJECT',
+    },
+    theme: {
+      preset: 'industrial-dark',
+    },
+    features: {
+      milestone: true,
+      commitPulse: true,
+      workflowRuns: true,
+      gitBranchGraph: true,
+      timeToShip: true,
+    },
+  },
   // {
   //   id: 'muxi-core',
   //   name: 'Muxi Core Engine',
